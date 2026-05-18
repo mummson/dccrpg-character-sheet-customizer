@@ -1,0 +1,418 @@
+<form class="customizer-config">
+  <header>
+    <h2>Custom Fields Configuration</h2>
+    <p class="notes">Configure custom abilities and panels for your character sheets. Custom abilities appear below Luck in the abilities section. Panels appear at the bottom of the sheet.</p>
+  </header>
+
+  <!-- Custom Abilities Section -->
+  <section class="abilities-section">
+    <div class="section-header">
+      <h3>Custom Abilities</h3>
+      <span class="small muted">Appear below Luck, styled like core abilities</span>
+    </div>
+    
+    {{#if abilities.length}}
+      {{#each abilities as |ability index|}}
+      <div class="ability-row" data-ability-index="{{index}}" data-ability-id="{{ability.id}}">
+        <!-- Hidden ID field that WILL be submitted -->
+        <input type="hidden" name="abilities[{{index}}].id" value="{{ability.id}}">
+        
+        <div class="stack">
+          <label for="ability-{{index}}-label">Label</label>
+          <input 
+            type="text" 
+            id="ability-{{index}}-label" 
+            name="abilities[{{index}}].label" 
+            value="{{ability.label}}"
+            placeholder="Ability Name"
+            required
+          >
+        </div>
+        
+        <div class="stack">
+          <label for="ability-{{index}}-type">Type</label>
+          <select 
+            id="ability-{{index}}-type" 
+            name="abilities[{{index}}].type"
+          >
+            {{#each @root.abilityTypes as |typeOption|}}
+            <option value="{{typeOption.value}}" {{#if (eq ability.type typeOption.value)}}selected{{/if}}>{{typeOption.label}}</option>
+            {{/each}}
+          </select>
+        </div>
+        
+        <div class="stack">
+          <label class="small muted">ID</label>
+          <span class="id-display small muted">{{ability.id}}</span>
+        </div>
+        
+        <button 
+          type="button" 
+          class="delete-ability danger" 
+          data-ability-index="{{index}}"
+          title="Delete Ability"
+        >
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+      {{/each}}
+    {{else}}
+      <div class="empty-state small">No custom abilities yet. Add one below.</div>
+    {{/if}}
+    
+    <button type="button" class="add-ability">
+      <i class="fas fa-plus"></i> Add Custom Ability
+    </button>
+  </section>
+
+  <!-- Panels Section -->
+  <section class="panels-section">
+    <div class="section-header">
+      <h3>Custom Panels</h3>
+      <span class="small muted">Appear at bottom of character sheet</span>
+    </div>
+    
+    {{#if panels.length}}
+      {{#each panels as |panel index|}}
+      <div class="panel-row" data-panel-index="{{index}}" data-panel-id="{{panel.id}}">
+        <!-- Hidden ID field that WILL be submitted -->
+        <input type="hidden" name="panels[{{index}}].id" value="{{panel.id}}">
+        
+        <div class="row-head">
+          <div class="stack">
+            <label for="panel-{{index}}-label">Panel Label</label>
+            <input 
+              type="text" 
+              id="panel-{{index}}-label" 
+              name="panels[{{index}}].label" 
+              value="{{panel.label}}"
+              placeholder="Panel Name"
+              required
+            >
+          </div>
+          
+          <button 
+            type="button" 
+            class="delete-panel danger" 
+            data-panel-index="{{index}}"
+            title="Delete Panel"
+          >
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+        
+        <div class="fields">
+          <div class="field-list-header">
+            <span class="small muted">Fields</span>
+          </div>
+          
+          {{#if panel.fields.length}}
+            {{#each panel.fields as |field fieldIndex|}}
+            <div class="field-row" data-field-index="{{fieldIndex}}" data-field-id="{{field.id}}">
+              <!-- Hidden ID field that WILL be submitted -->
+              <input type="hidden" name="panels[{{@../index}}].fields[{{fieldIndex}}].id" value="{{field.id}}">
+              
+              <div class="stack">
+                <input 
+                  type="text" 
+                  name="panels[{{@../index}}].fields[{{fieldIndex}}].label" 
+                  value="{{field.label}}"
+                  placeholder="Field Label"
+                  required
+                >
+              </div>
+              
+              <div class="stack">
+                <select name="panels[{{@../index}}].fields[{{fieldIndex}}].type">
+                  {{#each @root.panelFieldTypes as |typeOption|}}
+                  <option value="{{typeOption.value}}" {{#if (eq field.type typeOption.value)}}selected{{/if}}>{{typeOption.label}}</option>
+                  {{/each}}
+                </select>
+              </div>
+              
+              <div class="stack">
+                <span class="id-display small muted">{{field.id}}</span>
+              </div>
+              
+              <button 
+                type="button" 
+                class="delete-field danger" 
+                data-panel-index="{{@../index}}"
+                data-field-index="{{fieldIndex}}"
+                title="Delete Field"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            {{/each}}
+          {{else}}
+            <div class="empty-state small muted">No fields yet. Add one below.</div>
+          {{/if}}
+          
+          <button 
+            type="button" 
+            class="add-field" 
+            data-panel-index="{{index}}"
+          >
+            <i class="fas fa-plus"></i> Add Field
+          </button>
+        </div>
+      </div>
+      {{/each}}
+    {{else}}
+      <div class="empty-state">
+        <p>No panels configured yet. Click "Add Panel" to get started.</p>
+      </div>
+    {{/if}}
+    
+    <button type="button" class="add-panel">
+      <i class="fas fa-plus"></i> Add Panel
+    </button>
+  </section>
+
+  <footer class="actions">
+    <button type="button" class="reset-config danger">
+      <i class="fas fa-undo"></i> Reset All
+    </button>
+    
+    <div class="spacer"></div>
+    
+    <button type="submit" class="primary">
+      <i class="fas fa-save"></i> Save Configuration
+    </button>
+  </footer>
+</form>
+
+<style>
+/* Scoped styles for config dialog */
+.customizer-config {
+  padding: 10px;
+}
+
+.customizer-config header {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--color-border-light-tertiary, #ccc);
+}
+
+.customizer-config header h2 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+}
+
+.customizer-config header .notes {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-dark-secondary, #666);
+  line-height: 1.4;
+}
+
+/* Section Styling */
+.customizer-config section {
+  margin-bottom: 20px;
+  padding: 12px;
+  background: var(--color-bg-light, #f8f8f8);
+  border: 1px solid var(--color-border-light, #999);
+  border-radius: 4px;
+}
+
+.customizer-config .section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border-light-tertiary, #ddd);
+}
+
+.customizer-config .section-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Abilities Section */
+.customizer-config .abilities-section {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.customizer-config .ability-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr auto;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 8px;
+  padding: 8px;
+  background: white;
+  border: 1px solid var(--color-border-light-tertiary, #ddd);
+  border-radius: 3px;
+}
+
+.customizer-config .add-ability {
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* Panels Section */
+.customizer-config .panels-section {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.customizer-config .panel-row {
+  border: 1px solid var(--color-border-light, #999);
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 12px;
+  background: white;
+}
+
+.customizer-config .row-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 10px;
+}
+
+.customizer-config .add-panel {
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* Common Elements */
+.customizer-config .stack {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.customizer-config .stack label {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--color-text-dark-secondary, #555);
+  margin: 0;
+}
+
+.customizer-config .id-display {
+  display: block;
+  padding: 4px 6px;
+  background: var(--color-bg-light, #f0f0f0);
+  border: 1px solid var(--color-border-light-tertiary, #ddd);
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--color-text-dark-secondary, #666);
+  word-break: break-all;
+}
+
+.customizer-config input,
+.customizer-config select {
+  height: 28px;
+  line-height: 28px;
+  padding: 2px 6px;
+  background: white;
+  border: 1px solid var(--color-border-light, #999);
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+.customizer-config input:focus,
+.customizer-config select:focus {
+  outline: 2px solid var(--color-focus-outline, #4a90e2);
+  outline-offset: 0;
+}
+
+.customizer-config button {
+  height: 28px;
+  padding: 0 10px;
+  background: var(--color-bg-btn, #ddd);
+  border: 1px solid var(--color-border-light, #999);
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.customizer-config button:hover {
+  background: var(--color-bg-btn-hover, #ccc);
+}
+
+.customizer-config button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.customizer-config button.danger {
+  color: var(--color-text-light-error, #c00);
+}
+
+.customizer-config button.danger:hover {
+  background: var(--color-bg-light-error, #fee);
+}
+
+.customizer-config button.primary {
+  background: var(--color-bg-btn-primary, #4a90e2);
+  color: white;
+  border-color: var(--color-border-dark, #3a7bc8);
+  font-weight: bold;
+}
+
+.customizer-config button.primary:hover {
+  background: var(--color-bg-btn-primary-hover, #3a7bc8);
+}
+
+.customizer-config .fields {
+  border-top: 1px solid var(--color-border-light-tertiary, #ddd);
+  padding-top: 8px;
+}
+
+.customizer-config .field-list-header {
+  margin-bottom: 6px;
+}
+
+.customizer-config .field-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr auto;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+  padding: 6px;
+  background: var(--color-bg-light, #f8f8f8);
+  border: 1px solid var(--color-border-light-tertiary, #ddd);
+  border-radius: 3px;
+}
+
+.customizer-config .add-field {
+  margin-top: 6px;
+  width: 100%;
+}
+
+.customizer-config .empty-state {
+  padding: 20px;
+  text-align: center;
+  color: var(--color-text-dark-secondary, #666);
+  font-style: italic;
+}
+
+.customizer-config footer.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 2px solid var(--color-border-light-tertiary, #ccc);
+}
+
+.customizer-config footer .spacer {
+  flex: 1;
+}
+
+.customizer-config .small {
+  font-size: 11px;
+}
+
+.customizer-config .muted {
+  opacity: 0.7;
+}
+</style>

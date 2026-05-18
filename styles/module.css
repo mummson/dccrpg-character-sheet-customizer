@@ -1,0 +1,210 @@
+/**
+ * Styles for DCC RPG Character Sheet Customizer
+ * Matches DCC system styling using CSS variables
+ */
+
+/* ===== Extend ability-scores grid for custom abilities ===== */
+/* DCC defines exactly 5 rows of 68px, we need to extend this when custom abilities exist */
+.dcc .ability-scores:has(.customizer-ability-box) {
+  grid-template-rows: repeat(5, 68px) repeat(auto-fit, 68px);
+}
+
+/* ===== Custom Ability Boxes ===== */
+/* Custom abilities use standard .ability-box class, so they inherit all DCC styling automatically */
+/* We only need to ensure they have the correct height */
+.dcc .ability-scores .customizer-ability-box {
+  /* Height matches core abilities */
+  min-height: 68px;
+}
+
+/* Optional: Slightly different styling to distinguish custom abilities */
+.dcc .ability-scores .customizer-ability-box .box-title {
+  /* Use box-title class like core abilities do for first label */
+}
+
+
+/* ===== Custom Panels ===== */
+/* Match Lucky Roll / Languages panel styling and grid positioning */
+.dcc .character .customizer-panel {
+  /* Same positioning as lucky-roll and languages */
+  border: var(--system-frame-border);
+  border-top: 0;
+  display: grid;
+  font-size: 12px;
+  grid-column: 2;
+  grid-column-end: span 3; /* Spans columns 2-4 like Lucky Roll */
+  grid-template-rows: 19px auto;
+  min-height: 59px;
+  text-align: left;
+}
+
+.dcc .character .customizer-panel label.box-title {
+  text-align: left;
+  padding-left: 3px;
+  padding-top: 2px;
+  font-size: 14px;
+  font-weight: normal;
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+  font-family: var(--system-label-font), serif;
+}
+
+.dcc .character .customizer-panel-content {
+  background: none;
+  border: 0;
+  padding: 5px 8px;
+  display: grid;
+  grid-template-columns: max-content minmax(100px, 1fr);
+  gap: 6px 12px;
+  align-items: center;
+  justify-items: start;
+}
+
+/* ===== Field Styling ===== */
+.customizer-field {
+  display: contents; /* Makes children participate in parent grid */
+}
+
+.customizer-label {
+  font-family: var(--system-label-font), serif;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  text-align: left;
+  padding-right: 4px;
+  white-space: nowrap;
+  align-self: center;
+  justify-self: start;
+}
+
+.customizer-input,
+.customizer-panel-content input[type="text"],
+.customizer-panel-content input[type="number"]:not(.customizer-stepper-input) {
+  background: var(--system-input-background, rgba(255, 255, 255, 0.8));
+  border: 0;
+  border-bottom: 1px solid var(--system-input-border, rgba(0, 0, 0, 0.3));
+  border-radius: 0;
+  padding: 2px 4px;
+  font-family: var(--system-data-font), serif;
+  font-size: 12px;
+  height: 22px;
+  text-align: center;
+}
+
+.customizer-field input[type="text"],
+.customizer-field input[type="number"] {
+  background: var(--system-input-background, rgba(255, 255, 255, 0.8));
+  border: 0;
+  border-bottom: 1px solid var(--system-input-border, rgba(0, 0, 0, 0.3));
+  border-radius: 0;
+  padding: 2px 4px;
+  font-family: var(--system-data-font), serif;
+  font-size: 12px;
+  width: 100%;
+}
+
+.customizer-field input:focus {
+  outline: 2px solid var(--system-input-focus-outline, rgba(197, 49, 49, 0.5));
+  outline-offset: 1px;
+}
+
+/* ===== Current/Max Field (in panels) ===== */
+.customizer-currentmax-inputs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-start;
+}
+
+.customizer-currentmax-inputs input {
+  width: 40px;
+  text-align: center;
+}
+
+.customizer-sep {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--system-text-color, rgba(0, 0, 0, 0.7));
+}
+
+/* ===== Stepper Field ===== */
+.customizer-stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-start;
+}
+
+.customizer-stepper-btn {
+  background: var(--system-button-background, rgba(0, 0, 0, 0.1));
+  border: 1px solid var(--system-button-border, rgba(0, 0, 0, 0.3));
+  border-radius: 3px;
+  width: 24px;
+  height: 22px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.customizer-stepper-input {
+  width: 50px;
+  text-align: center;
+}
+
+.customizer-stepper-btn:hover {
+  background: var(--system-button-hover-background, rgba(0, 0, 0, 0.2));
+}
+
+.customizer-stepper-btn:active {
+  transform: scale(0.95);
+}
+
+.customizer-stepper-input {
+  flex: 1;
+  text-align: center;
+  min-width: 0;
+}
+
+/* ===== Responsive Adjustments ===== */
+@media (max-width: 600px) {
+  .customizer-inner-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dccrpg-character-sheet-customizer-container {
+    margin: 4px 0;
+  }
+}
+
+/* ===== Focus Visible Support ===== */
+.customizer-field input:focus-visible {
+  outline: 2px solid var(--system-input-focus-outline, rgba(197, 49, 49, 0.5));
+  outline-offset: 2px;
+}
+
+.customizer-stepper-btn:focus-visible {
+  outline: 2px solid var(--system-input-focus-outline, rgba(197, 49, 49, 0.5));
+  outline-offset: 2px;
+}
+
+/* ===== Non-editable Field States ===== */
+.customizer-field input[readonly],
+.customizer-field input[disabled] {
+  background: var(--system-input-disabled-background, rgba(0, 0, 0, 0.05));
+  color: var(--system-input-disabled-color, rgba(0, 0, 0, 0.5));
+  cursor: not-allowed;
+}
+
+/* ===== Print Styles ===== */
+@media print {
+  .customizer-stepper-btn {
+    display: none;
+  }
+  
+  .customizer-ability-box .box-title.rollable {
+    cursor: default;
+  }
+}

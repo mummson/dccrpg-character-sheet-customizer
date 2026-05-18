@@ -1,0 +1,16 @@
+dccrpg-character-sheet-customizer/
+├─ module.json
+├─ README.md
+├─ scripts/
+│  ├─ main.js
+│  ├─ hooks.js
+│  ├─ renderer.js
+│  ├─ settings.js
+│  ├─ store.js
+│  ├─ util.js
+├─ templates/
+│  ├─ config.html
+│  └─ panel.hbs
+└─ styles/
+   └─ module.css
+

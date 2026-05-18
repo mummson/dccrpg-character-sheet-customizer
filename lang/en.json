@@ -1,0 +1,11 @@
+{
+  "dccrpg-character-sheet-customizer": {
+    "settings": {
+      "configMenu": {
+        "name": "Configure Custom Fields",
+        "label": "Open Configuration",
+        "hint": "Configure custom panels and fields for character sheets"
+      }
+    }
+  }
+}
