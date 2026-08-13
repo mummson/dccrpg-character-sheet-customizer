@@ -23,6 +23,24 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
       if (!ability.rollKey) {
         ability.rollKey = slugifyRollKey(ability.label || ability.id)
       }
+
+      // Abilities saved before Rollable existed have no rollConfig at all.
+      // Custom Ability fields were always unconditionally rollable before this
+      // feature existed, so backfill enabled:true for them (matching
+      // fields.js's own runtime fallback) so the checkbox reflects reality and
+      // saving the dialog for any reason doesn't silently persist enabled:false
+      // for an ability that's actually always been rollable. Current/Max never
+      // had a roll affordance before, so it backfills to enabled:false - a
+      // purely new, opt-in capability.
+      if (!ability.rollConfig) {
+        ability.rollConfig = {
+          enabled: ability.type === FIELD_TYPES.CUSTOM_ABILITY,
+          rollName: '',
+          source: 'own',
+          customFormula: '',
+          rollUnder: false
+        }
+      }
     })
   }
 
@@ -114,17 +132,31 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
         { value: 'both', label: 'Both PC & NPC' },
         { value: 'pc', label: 'PC Only' },
         { value: 'npc', label: 'NPC Only' }
+      ],
+      rollSources: [
+        { value: 'own', label: "This Ability's Own Value/Mod" },
+        { value: 'str', label: 'Strength' },
+        { value: 'agl', label: 'Agility' },
+        { value: 'sta', label: 'Stamina' },
+        { value: 'per', label: 'Personality' },
+        { value: 'int', label: 'Intelligence' },
+        { value: 'lck', label: 'Luck' },
+        { value: 'frt', label: 'Fortitude Save' },
+        { value: 'ref', label: 'Reflex Save' },
+        { value: 'wil', label: 'Will Save' },
+        { value: 'custom', label: 'Custom Formula' }
       ]
     }
   }
 
   /**
-   * Keep each field-row's data-field-type attribute in sync with its Type
-   * select as the user changes it, so type-specific sub-fields (e.g.
-   * Resource's Default Max, Choice's options) reveal immediately via CSS
-   * instead of only after the next re-render. A pure-CSS :has(option
-   * [selected]) selector can't do this: Handlebars' "selected" is a static
-   * HTML attribute, not the select's live value.
+   * Keep each field-row's data-field-type attribute (and each ability's roll
+   * source attribute) in sync with their Type/Source selects as the user
+   * changes them, so type-specific sub-fields (Resource's Default Max,
+   * Choice's options, a rollable ability's Custom Formula input) reveal
+   * immediately via CSS instead of only after the next re-render. A
+   * pure-CSS :has(option[selected]) selector can't do this: Handlebars'
+   * "selected" is a static HTML attribute, not the select's live value.
    * @override
    */
   _onRender (context, options) {
@@ -135,6 +167,13 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
       if (!row) return
       row.setAttribute('data-field-type', select.value)
       select.addEventListener('change', () => row.setAttribute('data-field-type', select.value))
+    })
+
+    this.element.querySelectorAll('select[name$=".rollConfig.source"]').forEach(select => {
+      const settingsPanel = select.closest('.ability-roll-settings')
+      if (!settingsPanel) return
+      settingsPanel.setAttribute('data-roll-source', select.value)
+      select.addEventListener('change', () => settingsPanel.setAttribute('data-roll-source', select.value))
     })
   }
 
@@ -174,7 +213,8 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
       label,
       type: FIELD_TYPES.CUSTOM_ABILITY,
       appliesTo: 'both',
-      rollKey: slugifyRollKey(label)
+      rollKey: slugifyRollKey(label),
+      rollConfig: { enabled: true, rollName: '', source: 'own', customFormula: '', rollUnder: false }
     })
     this.render()
   }
@@ -295,15 +335,31 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
         }
       }
 
-      abilityData[abilityIndex][prop] = value
+      // rollConfig.* is a nested sub-object (Rollable, Roll Name, Source,
+      // Custom Formula, Roll Under) - the generic catch-all below would
+      // otherwise store a literal "rollConfig.enabled" key instead of
+      // nesting it, matching the existing appliesTo precedent for panels.
+      const rollConfigMatch = prop.match(/^rollConfig\.(.+)$/)
+      if (rollConfigMatch) {
+        abilityData[abilityIndex].rollConfig = abilityData[abilityIndex].rollConfig || {}
+        abilityData[abilityIndex].rollConfig[rollConfigMatch[1]] = value
+      } else {
+        abilityData[abilityIndex][prop] = value
+      }
     }
 
     // Convert to array, normalizing the roll key (trim + lowercase so casing
     // differences don't cause spurious duplicate/reserved-word mismatches)
+    // and coercing rollConfig's checkbox-backed booleans defensively (works
+    // whether formData.object already gave us real booleans or strings).
     for (const index in abilityData) {
       const ability = abilityData[index]
       if (typeof ability.rollKey === 'string') {
         ability.rollKey = ability.rollKey.trim().toLowerCase()
+      }
+      if (ability.rollConfig) {
+        ability.rollConfig.enabled = Boolean(ability.rollConfig.enabled)
+        ability.rollConfig.rollUnder = Boolean(ability.rollConfig.rollUnder)
       }
       abilities.push(ability)
     }
@@ -417,6 +473,20 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
         return { valid: false, error: `Duplicate Roll Key: "${ability.rollKey}"` }
       }
       rollKeys.add(ability.rollKey)
+
+      if (ability.rollConfig?.enabled) {
+        const validSources = ['own', 'str', 'agl', 'sta', 'per', 'int', 'lck', 'frt', 'ref', 'wil', 'custom']
+        if (!validSources.includes(ability.rollConfig.source)) {
+          return { valid: false, error: `"${ability.label}" has an invalid roll source` }
+        }
+        if (ability.rollConfig.source === 'custom' && !ability.rollConfig.customFormula?.trim()) {
+          return { valid: false, error: `"${ability.label}" is Rollable with a Custom Formula source but the formula is empty` }
+        }
+        const isSave = ['frt', 'ref', 'wil'].includes(ability.rollConfig.source)
+        if (isSave && ability.rollConfig.rollUnder) {
+          return { valid: false, error: `"${ability.label}": Roll Under can't be combined with a save source (saves never roll under)` }
+        }
+      }
 
       if (abilityIds.has(ability.id)) {
         return { valid: false, error: 'Duplicate ability ID detected' }

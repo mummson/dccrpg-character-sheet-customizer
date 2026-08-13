@@ -90,6 +90,53 @@
         >
           <i class="fas fa-trash"></i>
         </button>
+
+        <div class="ability-roll-toggle">
+          <label>
+            <input type="checkbox" name="abilities[{{index}}].rollConfig.enabled" {{#if ability.rollConfig.enabled}}checked{{/if}}>
+            Rollable
+          </label>
+
+          <div class="ability-roll-settings">
+            <div class="stack">
+              <label for="ability-{{index}}-rollName">Roll Name</label>
+              <input
+                type="text"
+                id="ability-{{index}}-rollName"
+                name="abilities[{{index}}].rollConfig.rollName"
+                value="{{ability.rollConfig.rollName}}"
+                placeholder="{{ability.label}}"
+              >
+            </div>
+
+            <div class="stack">
+              <label for="ability-{{index}}-rollSource">Source</label>
+              <select id="ability-{{index}}-rollSource" name="abilities[{{index}}].rollConfig.source">
+                {{#each @root.rollSources as |src|}}
+                <option value="{{src.value}}" {{#if (eq ability.rollConfig.source src.value)}}selected{{/if}}>{{src.label}}</option>
+                {{/each}}
+              </select>
+            </div>
+
+            <div class="stack ability-roll-custom-formula">
+              <label for="ability-{{index}}-customFormula">Custom Formula</label>
+              <input
+                type="text"
+                id="ability-{{index}}-customFormula"
+                name="abilities[{{index}}].rollConfig.customFormula"
+                value="{{ability.rollConfig.customFormula}}"
+                placeholder="1d20+@lckMod"
+              >
+            </div>
+
+            <div class="stack">
+              <label>
+                <input type="checkbox" name="abilities[{{index}}].rollConfig.rollUnder" {{#if ability.rollConfig.rollUnder}}checked{{/if}}>
+                Roll Under
+              </label>
+            </div>
+          </div>
+        </div>
       </div>
       {{/each}}
     {{else}}
@@ -379,6 +426,33 @@
   padding: 8px;
   border: 1px solid var(--color-border);
   border-radius: 3px;
+}
+
+/* Rollable ability settings - the checkbox reveal is pure CSS (a checkbox's
+   :checked state is live, unlike a <select>'s "selected" attribute), but the
+   Source-driven Custom Formula reveal reuses the same data-attribute
+   technique as Stage B's field-row Type reveal (see settings.js _onRender). */
+.customizer-config .ability-roll-toggle {
+  grid-column: 1 / -1;
+}
+
+.customizer-config .ability-roll-settings {
+  display: none;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.customizer-config .ability-roll-toggle:has(> label > input[type="checkbox"]:checked) .ability-roll-settings {
+  display: grid;
+}
+
+.customizer-config .ability-roll-custom-formula {
+  display: none;
+}
+
+.customizer-config .ability-roll-settings[data-roll-source="custom"] .ability-roll-custom-formula {
+  display: flex;
 }
 
 .customizer-config .add-ability {

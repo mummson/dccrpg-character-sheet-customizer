@@ -376,8 +376,8 @@ function attachEventListeners (html, actor) {
     event.preventDefault()
     const element = $(this)
     const fieldId = element.data('field-id')
-    
-    await rollCustomAbilityCheck(actor, fieldId)
+
+    await rollCustomAbilityCheck(actor, fieldId, event)
   })
   
   console.log('dccrpg-character-sheet-customizer | Event listeners attached')
@@ -521,37 +521,157 @@ async function saveFieldValue (actor, fieldId, value, fieldPart) {
 }
 
 /**
- * Roll a custom ability check
- * @param {Actor} actor - The actor
- * @param {string} fieldId - The field ID
+ * Resolve the roll-over bonus for a rollable custom ability, given its
+ * configured source. 'own' uses the ability's own modifier (Custom Ability
+ * type only - Current/Max has no modifier concept, so 'own' is a flat +0
+ * there; pick a real stat from the dropdown, or use Roll Under against
+ * Current instead). Any other source reads DCC's own rollData shorthand
+ * keys directly (str/agl/sta/per/int/lck/frt/ref/wil), which already match
+ * these source values one-to-one.
+ * @param {Object} fieldConfig - The ability's config (id/type/rollConfig/etc.)
+ * @param {Object} abilityValue - The actor's stored value for this ability
+ * @param {string} source - rollConfig.source
+ * @param {Object} rollData - actor.getRollData()
+ * @returns {number}
  */
-async function rollCustomAbilityCheck (actor, fieldId) {
-  const customAbilities = getCustomAbilities(actor)
-  const ability = customAbilities[fieldId]
-  
-  if (!ability) {
+function resolveRollBonus (fieldConfig, abilityValue, source, rollData) {
+  if (source === 'own') {
+    return fieldConfig.type === FIELD_TYPES.CUSTOM_ABILITY ? (abilityValue.mod ?? 0) : 0
+  }
+  return parseInt(rollData[source]) || 0
+}
+
+/**
+ * Resolve the roll-under target score for a rollable custom ability. 'own'
+ * compares against the ability's own value (Custom Ability) or its current
+ * value (Current/Max - e.g. "roll under current Sanity"). Any other source
+ * compares against a core ability's raw SCORE (not its modifier), matching
+ * how DCC's own Luck roll-under compares against the score. Only reachable
+ * for str/agl/sta/per/int/lck - config-save validation rejects Roll Under
+ * combined with a save source, since DCC saves never roll under.
+ * @param {Actor} actor - The actor
+ * @param {Object} fieldConfig - The ability's config
+ * @param {Object} abilityValue - The actor's stored value for this ability
+ * @param {string} source - rollConfig.source
+ * @returns {number}
+ */
+function resolveRollUnderTarget (actor, fieldConfig, abilityValue, source) {
+  if (source === 'own') {
+    return fieldConfig.type === FIELD_TYPES.CUSTOM_ABILITY ? (abilityValue.value ?? 10) : (abilityValue.current ?? 0)
+  }
+  return parseInt(actor.system?.abilities?.[source]?.value) || 10
+}
+
+/**
+ * Roll a rollable custom ability, dispatching to the roll-over or roll-under
+ * path per its configured rollConfig.
+ * @param {Actor} actor - The actor
+ * @param {string} fieldId - The ability's field ID
+ * @param {Event} [event] - The click event (ctrl/cmd-click toggles the roll
+ *   modifier dialog, same as a real DCC ability check)
+ */
+async function rollCustomAbilityCheck (actor, fieldId, event) {
+  const abilities = getAbilitiesConfig()
+  const fieldConfig = abilities.find(f => f.id === fieldId)
+  if (!fieldConfig) {
     ui.notifications.warn('Custom ability not found')
     return
   }
-  
-  // Find field config for label
-  const abilities = getAbilitiesConfig()
-  const fieldConfig = abilities.find(f => f.id === fieldId)
-  
-  const label = fieldConfig?.label || 'Custom Ability'
-  const modifier = ability.mod || 0
-  
-  // Create roll formula
-  const formula = `1d20+${modifier}`
-  
-  // Create and evaluate roll
-  const roll = new Roll(formula, actor.getRollData())
-  await roll.evaluate({ async: true })
-  
-  // Send to chat
-  roll.toMessage({
+
+  // Abilities saved before Rollable existed have no rollConfig at all. Custom
+  // Ability was always unconditionally rollable before this was
+  // configurable; Current/Max never had a roll affordance before, so it
+  // defaults to disabled (matches fields.js's own renderAsAbility default).
+  const rollConfig = fieldConfig.rollConfig ??
+    (fieldConfig.type === FIELD_TYPES.CUSTOM_ABILITY ? { enabled: true, source: 'own', rollUnder: false } : { enabled: false })
+  if (!rollConfig.enabled) return // shouldn't be reachable (UI wouldn't emit the click target), but guard anyway
+
+  const customAbilities = getCustomAbilities(actor)
+  const abilityValue = customAbilities[fieldId] || {}
+  const label = rollConfig.rollName?.trim() || fieldConfig.label || 'Custom Ability'
+  const rollData = actor.getRollData()
+
+  if (rollConfig.rollUnder) {
+    await rollCustomAbilityRollUnder(actor, fieldConfig, abilityValue, rollConfig, label, rollData)
+  } else {
+    await rollCustomAbilityRollOver(actor, fieldConfig, abilityValue, rollConfig, label, rollData, event)
+  }
+}
+
+/**
+ * Roll-over path: 1d20 + a resolved bonus (or a freeform custom formula),
+ * evaluated through game.dcc.DCCRoll.createRoll so it respects the same
+ * modifier-dialog behavior (and Ctrl-click toggle) as a real DCC ability
+ * check. DCCRoll.createRoll accepts a plain formula string directly (it
+ * auto-decomposes it into Die/Modifier terms), so stat-sourced and
+ * custom-formula rolls share this one path.
+ */
+async function rollCustomAbilityRollOver (actor, fieldConfig, abilityValue, rollConfig, label, rollData, event) {
+  let formula
+  if (rollConfig.source === 'custom') {
+    formula = rollConfig.customFormula?.trim() || '1d20'
+  } else {
+    const bonus = resolveRollBonus(fieldConfig, abilityValue, rollConfig.source, rollData)
+    formula = `1d20${bonus >= 0 ? '+' : ''}${bonus}`
+  }
+
+  const showModifierDialog = game.settings.get('dcc', 'showRollModifierByDefault') !== !!(event?.ctrlKey || event?.metaKey)
+
+  let roll
+  try {
+    roll = await game.dcc.DCCRoll.createRoll(formula, rollData, { showModifierDialog })
+  } catch (err) {
+    // The modifier dialog was cancelled/closed without submitting - a normal
+    // user decision, not an error. DCC signals this with a typed error, a
+    // duck-typing marker, or (older-style) a bare null rejection.
+    if (err === null || err?.isRollCancellation === true || err?.name === 'RollCancelledError') return
+    throw err
+  }
+  // DCCRoll.createRoll always returns an UNEVALUATED Roll, whether or not the
+  // dialog was shown - confirmed by reading systems/dcc/module/roll-modifier.js.
+  await roll.evaluate()
+
+  await roll.toMessage({
     speaker: ChatMessage.getSpeaker({ actor }),
     flavor: `${label} Check`,
+    flags: {
+      'dcc.RollType': 'AbilityCheck',
+      'dcc.Ability': fieldConfig.id,
+      'dcc.isAbilityCheck': true
+    },
+    rollMode: game.settings.get('core', 'rollMode')
+  })
+}
+
+/**
+ * Roll-under path: mirrors DCC's own Luck check - a naked 1d20 (no
+ * modifier), success if the roll is <= the target score, with the die
+ * term tagged so the system's generic crit/fumble highlight hook inverts
+ * correctly (low roll = success/green, high roll = failure/red). No
+ * modifier dialog, matching how Luck's own roll-under never shows one.
+ */
+async function rollCustomAbilityRollUnder (actor, fieldConfig, abilityValue, rollConfig, label, rollData) {
+  const target = resolveRollUnderTarget(actor, fieldConfig, abilityValue, rollConfig.source)
+  const roll = new Roll('1d20', rollData)
+  await roll.evaluate()
+
+  const success = roll.total <= target
+  const flavor = `${label} Check (Roll Under) — ${success ? 'Success' : 'Failure'}`
+
+  const primaryTerm = roll.terms?.[0]
+  if (primaryTerm) {
+    primaryTerm.options = primaryTerm.options ?? {}
+    primaryTerm.options.dcc = { rollUnder: true, lowerThreshold: target, upperThreshold: target + 1 }
+  }
+
+  await roll.toMessage({
+    speaker: ChatMessage.getSpeaker({ actor }),
+    flavor,
+    flags: {
+      'dcc.RollType': 'AbilityCheckRollUnder',
+      'dcc.Ability': fieldConfig.id,
+      'dcc.isAbilityCheck': true
+    },
     rollMode: game.settings.get('core', 'rollMode')
   })
 }

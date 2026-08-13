@@ -158,10 +158,19 @@ export const CurrentMaxField = {
     const label = fieldConfig.label || 'Field'
     const current = value?.current ?? 0
     const max = value?.max ?? 0
-    
+
+    // Current/Max never had a roll affordance before this was configurable -
+    // default false, a purely new opt-in capability (unlike Custom Ability
+    // below, there's no prior always-on behavior to preserve here).
+    const rollable = fieldConfig.rollConfig?.enabled
+    const rollName = fieldConfig.rollConfig?.rollName?.trim() || label
+    const titleAttrs = rollable
+      ? `class="box-title rollable" title="Roll ${rollName} Check" data-action="rollAbilityCheck" data-field-id="${fieldId}"`
+      : 'class="box-title"'
+
     return `
       <div class="ability-box customizer-ability-box" id="customizer-${fieldId}" data-field-id="${fieldId}" data-field-type="${this.type}">
-        <label for="customizer-${fieldId}-current" class="box-title">
+        <label for="customizer-${fieldId}-current" ${titleAttrs}>
           ${label}
         </label>
         <div class="ability-score">
@@ -450,13 +459,22 @@ export const CustomAbilityField = {
     const abilityValue = value?.value ?? 10
     const max = value?.max ?? 10
     const mod = value?.mod ?? getAbilityModifier(abilityValue)
-    
+
+    // Custom Ability was always unconditionally rollable before this became
+    // configurable - abilities saved before the feature existed have no
+    // rollConfig at all, so absence defaults to enabled:true (matching
+    // settings.js's own in-memory backfill for the config dialog) rather
+    // than silently disabling rolling for every existing custom ability.
+    // Only an explicit rollConfig.enabled === false actually suppresses it.
+    const rollable = fieldConfig.rollConfig ? fieldConfig.rollConfig.enabled : true
+    const rollName = fieldConfig.rollConfig?.rollName?.trim() || label
+    const titleAttrs = rollable
+      ? `class="box-title rollable" title="Roll ${rollName} Check" data-action="rollAbilityCheck" data-field-id="${fieldId}"`
+      : 'class="box-title"'
+
     return `
       <div class="ability-box customizer-ability-box" id="customizer-${fieldId}" data-field-id="${fieldId}" data-field-type="${this.type}">
-        <label for="customizer-${fieldId}-value" class="box-title rollable"
-               title="Roll ${label} Check"
-               data-action="rollAbilityCheck"
-               data-field-id="${fieldId}">
+        <label for="customizer-${fieldId}-value" ${titleAttrs}>
           ${label}
         </label>
         <div class="ability-score">

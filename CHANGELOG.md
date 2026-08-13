@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Added a "Rollable" option to custom abilities (both Custom Ability and
+  Current/Max types): a Roll Name, a Source (the ability's own value/mod, one
+  of the six core ability mods, one of the three saves, or a freeform custom
+  formula), and a Roll Under option that mirrors DCC's own Luck check (a
+  naked d20 compared against the score, instead of d20+modifier). Uses the
+  same `game.dcc.DCCRoll` API and modifier dialog real DCC ability checks
+  use, so rolling a custom ability behaves like rolling a real one -
+  including respecting Ctrl-click and the "show roll modifier by default"
+  setting. Custom Ability fields were always unconditionally rollable before
+  this existed; that behavior is preserved by default for anything saved
+  before this update.
 - Increased the config dialog's default window size (900x750, up from 700x600).
 - Added three new panel field types: **Resource** (Current/Max with +/- buttons on
   Current only, clamped between 0 and Max; GM sets a Default Max per field), **Choice**
