@@ -24,6 +24,14 @@ Custom abilities are fully integrated with the DCC roll system:
 - Use in formulas: `@sanityMod` or `@customAbilities.sanity.value`
 - Modifiers auto-calculate using DCC ability score table (3-24)
 
+### PC / NPC Scoping
+
+Each custom ability and each custom panel has an **Applies To** setting: **Both**,
+**PC Only**, or **NPC Only**. Use this when a field only makes sense for one actor
+type — e.g. a Sanity ability for player characters, or a Morale tracker just for
+NPCs. Defaults to Both, matching prior versions where every field appeared
+everywhere.
+
 ## Installation
 
 1. In Foundry VTT, go to **Add-on Modules**
@@ -35,7 +43,7 @@ Custom abilities are fully integrated with the DCC roll system:
 
 Paste this manifest URL:
 ```
-https://github.com/yourusername/dccrpg-character-sheet-customizer/releases/latest/download/module.json
+TODO: fill in once the GitHub repository exists
 ```
 
 ## Usage
@@ -51,12 +59,14 @@ https://github.com/yourusername/dccrpg-character-sheet-customizer/releases/lates
 
 1. Click **Add Panel** to create a new panel
 2. Give it a name (e.g., "Sanity & Corruption")
-3. Choose position: **Top** or **Bottom**
+3. Choose **Applies To**: Both, PC Only, or NPC Only
 4. Click **Add Field** to add fields to the panel
 5. Configure each field:
    - **Label**: Display name
    - **Type**: Choose from 5 field types
    - **ID**: Auto-generated (used for roll formulas)
+
+Custom abilities have the same **Applies To** option, next to their type selector.
 
 ### Field Type Examples
 
@@ -112,9 +122,9 @@ https://github.com/yourusername/dccrpg-character-sheet-customizer/releases/lates
 
 ### Compatibility
 
-- **Foundry VTT**: v11-v12
+- **Foundry VTT**: v13+ (verified on v14)
 - **DCC System**: v0.19.0+
-- Works with both PC and NPC sheets
+- Works with both PC and NPC sheets, with per-field PC/NPC/Both scoping (see above)
 
 ### Performance
 
@@ -148,7 +158,7 @@ The module uses DCC system CSS variables. If styles look wrong:
 ### Building From Source
 
 ```bash
-git clone https://github.com/yourusername/dccrpg-character-sheet-customizer
+git clone TODO: fill in once the GitHub repository exists
 cd dccrpg-character-sheet-customizer
 # Copy to Foundry modules directory
 ```
@@ -192,16 +202,10 @@ Contributions welcome! Please:
 
 ## Changelog
 
-### 2.0.0
-- Complete rewrite with clean architecture
-- Added Custom Ability field type with auto-calculated modifiers
-- Smart field placement (abilities vs panels)
-- Improved roll integration
-- Responsive grid layout
-- Better DCC styling compatibility
+See [CHANGELOG.md](CHANGELOG.md).
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/dccrpg-character-sheet-customizer/issues)
+- **Issues**: TODO: fill in once the GitHub repository exists
 - **Discord**: Find me on the Foundry VTT Discord
-- **Documentation**: [Wiki](https://github.com/yourusername/dccrpg-character-sheet-customizer/wiki)
+- **Documentation**: TODO: fill in once the GitHub repository exists

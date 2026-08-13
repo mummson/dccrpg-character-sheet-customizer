@@ -27,7 +27,7 @@
 
 5. Configure the panel:
    - Label: `Custom Abilities`
-   - Position: `Top`
+   - Applies To: `Both`
 
 6. Click **Add Field** and configure:
    - Label: `Sanity`
@@ -63,8 +63,6 @@
 - Clear browser cache (Ctrl+Shift+R)
 
 ## File Locations
-
-All module files are in `/mnt/user-data/outputs/dccrpg-character-sheet-customizer/`
 
 Need to edit? Key files:
 - `scripts/main.js` - Entry point
