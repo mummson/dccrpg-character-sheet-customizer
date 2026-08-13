@@ -38,6 +38,11 @@ export function injectCustomFields (sheet, html) {
   console.log('dccrpg-character-sheet-customizer | Abilities config:', abilities)
   console.log('dccrpg-character-sheet-customizer | Panels config:', panels)
   
+  // Inject a single full-width separator into character-grid before any custom content
+  if (abilities.length > 0 || panels.length > 0) {
+    injectCustomSeparator(html)
+  }
+
   // Inject custom abilities (below Luck in abilities section)
   if (abilities.length > 0) {
     console.log('dccrpg-character-sheet-customizer | Injecting', abilities.length, 'abilities')
@@ -45,7 +50,7 @@ export function injectCustomFields (sheet, html) {
   } else {
     console.log('dccrpg-character-sheet-customizer | No abilities to inject')
   }
-  
+
   // Inject panels (at bottom of character grid)
   if (panels.length > 0) {
     console.log('dccrpg-character-sheet-customizer | Injecting', panels.length, 'panels')
@@ -59,6 +64,22 @@ export function injectCustomFields (sheet, html) {
   
   // Auto-resize sheet if needed
   autoResizeSheet(sheet, html)
+}
+
+/**
+ * Inject a single full-width separator into character-grid after lucky-roll.
+ * Spans all 4 columns so it forms one unbroken dotted line, matching DCC's own row-separators.
+ */
+function injectCustomSeparator (html) {
+  const characterGrid = html.find('.character-grid, .npc-grid').first()
+  if (characterGrid.length === 0) return
+  const luckyRoll = characterGrid.find('.lucky-roll')
+  const sep = $('<div class="customizer-row-separator" data-customizer-container="customizer-sep"></div>')
+  if (luckyRoll.length) {
+    luckyRoll.last().after(sep)
+  } else {
+    characterGrid.append(sep)
+  }
 }
 
 /**
@@ -84,31 +105,33 @@ function injectAbilityFields (sheet, html, abilities, actor) {
   const customAbilities = getCustomAbilities(actor)
   console.log('dccrpg-character-sheet-customizer | Custom abilities data:', JSON.stringify(customAbilities, null, 2))
   
-  // Render each ability field and append directly to ability-scores container
-  abilities.forEach(ability => {
+  // Render each ability field and append directly to ability-scores container.
+  // First ability gets 'customizer-first-ability' for the border-top separator line.
+  abilities.forEach((ability, index) => {
     console.log('dccrpg-character-sheet-customizer | Rendering ability:', ability.label, 'type:', ability.type, 'id:', ability.id)
     const renderer = getFieldRenderer(ability.type)
     const value = customAbilities[ability.id] || {}
     console.log('dccrpg-character-sheet-customizer | Value for', ability.id, ':', JSON.stringify(value))
-    
+
     // Use renderAsAbility method for proper styling
-    const fieldHtml = renderer.renderAsAbility ? 
-      renderer.renderAsAbility(ability, value) : 
+    const fieldHtml = renderer.renderAsAbility ?
+      renderer.renderAsAbility(ability, value) :
       renderer.render(ability, value)
-    
+
     console.log('dccrpg-character-sheet-customizer | Generated HTML length:', fieldHtml.length)
-    
-    // Append directly inside the ability-scores container (after Luck)
-    abilitiesContainer.append(fieldHtml)
+
+    const el = $(fieldHtml)
+    if (index === 0) el.addClass('customizer-first-ability')
+    abilitiesContainer.append(el)
   })
   
   console.log('dccrpg-character-sheet-customizer | Abilities injected successfully')
 }
 
 /**
- * Inject panels into a container placed after the character-grid (not inside it).
- * Placing panels inside the grid causes them to auto-place into an implicit row at
- * the bottom of a height:100% grid, creating a large empty gap above the panels.
+ * Inject panels inside the character-grid, inserted after lucky-roll in DOM order.
+ * Panels use grid-column 2/span-3 (matching lucky-roll) so they appear under Lucky Roll.
+ * The CSS :has(.customizer-panel) rule switches character-grid to height:auto.
  * @param {ActorSheet} sheet - The character sheet
  * @param {jQuery} html - The sheet HTML
  * @param {Array} panels - Array of panel configs with fields
@@ -121,26 +144,23 @@ function injectPanels (sheet, html, panels, actor) {
 
   const fieldValues = getActorFieldValues(actor)
 
-  // Find the character grid — panels container goes after it as a sibling
   const characterGrid = html.find('.character-grid, .npc-grid').first()
   if (characterGrid.length === 0) {
     console.warn('dccrpg-character-sheet-customizer | Could not find character grid')
     return
   }
 
-  // Create a single wrapper that triggers the CSS :has() override on character-grid height
-  const panelsContainer = $('<div class="customizer-panels-container" data-customizer-container="panels-wrapper"></div>')
-  characterGrid.after(panelsContainer)
+  // Insert after the separator; fall back to after lucky-roll, then append to grid
+  const luckyRoll = characterGrid.find('.lucky-roll')
+  const customSep = characterGrid.find('.customizer-row-separator')
+  let insertAfter = customSep.length ? customSep.last()
+    : luckyRoll.length ? luckyRoll.last()
+    : null
 
   panels.forEach(panel => {
     console.log('dccrpg-character-sheet-customizer | Creating panel:', panel.label)
 
-    const panelElement = $(`
-      <div class="customizer-panel" data-panel-id="${panel.id}">
-        <label class="box-title">${panel.label}</label>
-        <div class="customizer-panel-content"></div>
-      </div>
-    `)
+    const panelElement = $(`<div class="customizer-panel box-border" data-customizer-container="panel" data-panel-id="${panel.id}"><label class="box-title">${panel.label}</label><div class="customizer-panel-content"></div></div>`)
 
     const content = panelElement.find('.customizer-panel-content')
 
@@ -152,7 +172,12 @@ function injectPanels (sheet, html, panels, actor) {
       })
     }
 
-    panelsContainer.append(panelElement)
+    if (insertAfter) {
+      insertAfter.after(panelElement)
+      insertAfter = panelElement
+    } else {
+      characterGrid.append(panelElement)
+    }
   })
 
   console.log('dccrpg-character-sheet-customizer | Panels injected successfully')
@@ -442,7 +467,9 @@ async function rollCustomAbilityCheck (actor, fieldId) {
 
 /**
  * Auto-resize the sheet height to show all injected content without scrolling.
- * Uses requestAnimationFrame so the browser has applied layout before we measure.
+ * Double-rAF: first frame applies CSS :has() layout, second measures resulting geometry.
+ * The character tab section has overflow:auto and clips its content, so we must measure
+ * its internal overflow (scrollHeight - clientHeight) rather than window-content.scrollHeight.
  * @param {ActorSheet} sheet - The character sheet
  * @param {jQuery} html - The sheet HTML
  */
@@ -452,30 +479,35 @@ function autoResizeSheet (sheet, html) {
 
   if (!hasCustomContent) return
 
-  // Defer one frame — the CSS :has() override on character-grid height needs a layout flush
   requestAnimationFrame(() => {
-    try {
-      // sheet.element is the window root in both AppV1 and AppV2
-      const sheetEl = sheet.element instanceof jQuery ? sheet.element[0] : sheet.element
-      const winEl = sheetEl?.closest?.('.window-app') ?? sheetEl
-      if (!winEl) return
+    requestAnimationFrame(() => {
+      try {
+        const sheetEl = sheet.element instanceof jQuery ? sheet.element[0] : sheet.element
+        const winEl = sheetEl?.closest?.('.window-app') ?? sheetEl
+        if (!winEl) return
 
-      const contentEl = winEl.querySelector('.window-content')
-      if (!contentEl) return
+        const contentEl = winEl.querySelector('.window-content')
+        if (!contentEl) return
 
-      // Chrome = everything outside window-content (header, borders)
-      const chromeOffset = winEl.offsetHeight - contentEl.offsetHeight
-      const needed = contentEl.scrollHeight + chromeOffset
-      const maxH = Math.floor(window.innerHeight * 0.9)
-      const desired = Math.min(needed, maxH)
-      const current = sheet.position?.height ?? winEl.offsetHeight
+        // The character tab section has overflow:auto — window-content.scrollHeight cannot
+        // see overflow that is clipped inside the tab. Measure the tab directly instead.
+        const characterTab = contentEl.querySelector('section[data-tab="character"]')
+        if (!characterTab) return
 
-      if (desired > current + 24) {
-        sheet.setPosition({ height: desired })
+        const overflow = characterTab.scrollHeight - characterTab.clientHeight
+        if (overflow <= 10) return
+
+        const maxH = Math.floor(window.innerHeight * 0.9)
+        const desired = Math.min(winEl.offsetHeight + overflow, maxH)
+        const current = sheet.position?.height ?? winEl.offsetHeight
+
+        if (desired > current + 10) {
+          sheet.setPosition({ height: desired })
+        }
+      } catch (e) {
+        console.warn('dccrpg-character-sheet-customizer | autoResizeSheet failed', e)
       }
-    } catch (e) {
-      console.warn('dccrpg-character-sheet-customizer | autoResizeSheet failed', e)
-    }
+    })
   })
 }
 

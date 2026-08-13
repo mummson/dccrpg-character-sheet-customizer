@@ -4,53 +4,62 @@
  */
 
 /* ===== Extend ability-scores grid for custom abilities ===== */
-/* DCC defines exactly 5 explicit rows; implicit rows (Luck + any custom) need the same height.
-   grid-auto-rows covers all implicit rows — repeat(auto-fit,...) requires a definite height. */
+/* DCC defines exactly 5 explicit rows for STR-INT; LCK is already in an implicit auto row.
+   We don't set grid-auto-rows — implicit rows size to content so the 9px separator row stays slim.
+   Custom ability boxes use min-height to stay 68px like core abilities. */
 .dcc .ability-scores:has(.customizer-ability-box) {
   grid-template-rows: repeat(5, 68px);
-  grid-auto-rows: 68px;
 }
 
 /* ===== Custom Ability Boxes ===== */
-/* Custom abilities use standard .ability-box class, so they inherit all DCC styling automatically */
-/* We only need to ensure they have the correct height */
 .dcc .ability-scores .customizer-ability-box {
-  /* Height matches core abilities */
   min-height: 68px;
 }
 
-/* Optional: Slightly different styling to distinguish custom abilities */
-.dcc .ability-scores .customizer-ability-box .box-title {
-  /* Use box-title class like core abilities do for first label */
+/* Force LCK row height to match Lucky Roll (79px) so the separator div and the first
+   custom ability row start at the same Y coordinate. */
+.dcc .ability-scores:has(.customizer-ability-box) .ability-box[data-ability="lck"] {
+  min-height: 79px;
+}
+
+/* First custom ability clears below the separator (9px height + 3px margin-bottom = 12px). */
+.dcc .ability-scores .customizer-first-ability {
+  margin-top: 12px;
 }
 
 
 /* ===== Custom Panels ===== */
-/* Panels live in .customizer-panels-container AFTER the character-grid, not inside the grid.
-   No grid-column rules needed — they span the full container width. */
+/* Panels live inside the character-grid, inserted after lucky-roll in DOM order.
+   grid-column matches lucky-roll (columns 2–4) so panels align under Lucky Roll. */
 .dcc .character .customizer-panel {
   border: var(--system-frame-border);
   border-top: 0;
   display: grid;
   font-size: 12px;
+  grid-column: 2;
+  grid-column-end: span 3;
   grid-template-rows: 19px auto;
   min-height: 59px;
   text-align: left;
 }
 
-/* When the panels container exists, let the character-grid shrink to content height
-   so the panels appear immediately below it instead of in a far-down implicit row. */
-.dcc .character:has(.customizer-panels-container) .character-grid {
+/* Let the character-grid grow to wrap custom content instead of filling 100% height.
+   align-content: start packs all rows to the top so lucky-roll's row never stretches
+   when the sheet is resized — keeping panel and ability positions in sync. */
+.dcc .character .character-grid:has(.customizer-panel, .customizer-ability-box) {
   height: auto;
   min-height: 100%;
+  align-content: start;
 }
 
-/* Container that holds all injected panels, placed after the character-grid */
-.dcc .character .customizer-panels-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 4px 0;
+/* Single separator spanning all 4 columns — same approach as DCC's own row-separators.
+   Injected as a direct child of character-grid so it forms one unbroken dotted line. */
+.dcc .character .customizer-row-separator {
+  border-bottom: 2px dotted var(--system-secondary-color);
+  grid-column: 1;
+  grid-column-end: span 4;
+  height: 9px;
+  margin-bottom: 3px;
 }
 
 .dcc .character .customizer-panel label.box-title {
