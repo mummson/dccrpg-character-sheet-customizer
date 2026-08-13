@@ -36,8 +36,8 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
       resizable: true
     },
     position: {
-      width: 700,
-      height: 600
+      width: 900,
+      height: 750
     },
     form: {
       handler: CustomizerConfigDialog.#onSubmit,
