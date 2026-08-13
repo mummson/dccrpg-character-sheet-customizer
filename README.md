@@ -43,7 +43,7 @@ everywhere.
 
 Paste this manifest URL:
 ```
-TODO: fill in once the GitHub repository exists
+https://github.com/mummson/dccrpg-character-sheet-customizer/releases/latest/download/module.json
 ```
 
 ## Usage
@@ -158,7 +158,7 @@ The module uses DCC system CSS variables. If styles look wrong:
 ### Building From Source
 
 ```bash
-git clone TODO: fill in once the GitHub repository exists
+git clone https://github.com/mummson/dccrpg-character-sheet-customizer
 cd dccrpg-character-sheet-customizer
 # Copy to Foundry modules directory
 ```
@@ -206,6 +206,5 @@ See [CHANGELOG.md](CHANGELOG.md).
 
 ## Support
 
-- **Issues**: TODO: fill in once the GitHub repository exists
+- **Issues**: [GitHub Issues](https://github.com/mummson/dccrpg-character-sheet-customizer/issues)
 - **Discord**: Find me on the Foundry VTT Discord
-- **Documentation**: TODO: fill in once the GitHub repository exists
