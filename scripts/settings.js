@@ -75,7 +75,7 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
         {
           value: FIELD_TYPES.CURRENT_MAX,
           label: 'Current / Max',
-          description: 'A resource tracker with no modifier, like HP: just a Current value and a Maximum.'
+          description: 'An ability without a modifier, like Sanity: just a Current value and a Maximum, no auto-calculated bonus.'
         }
       ],
       panelFieldTypes: [

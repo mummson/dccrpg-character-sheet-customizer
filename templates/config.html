@@ -240,69 +240,83 @@
 
   <style>
 /* Scoped styles for config dialog.
-   Colors are intentionally hardcoded rather than pulled from Foundry's
-   --color-* theme variables: this dialog forces light card backgrounds
-   regardless of the active core theme, and relying on theme variables for
-   text color (while hardcoding light backgrounds) produced near-invisible
-   text once Foundry's v13+ dark UI theme redefined those variables for use
-   on dark backgrounds. */
+   Structural/layout only. Foundry's core CSS already styles bare
+   input/select/button elements to match the active theme (colors, fonts,
+   focus rings - see @layer elements.forms in foundry2.css); this stylesheet
+   used to override those with its own hardcoded hex colors, which - being
+   unlayered - always won the cascade regardless of specificity, fighting
+   Foundry's theme and producing a mismatched, sometimes unreadable, result.
+   Only var(--color-*) tokens are used here so borders/text follow whatever
+   theme (light or dark) is actually active, matching the rest of Foundry. */
 .customizer-config {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
   padding: 10px;
-  background: #ffffff;
-  color: #1a1a1a;
+  gap: 10px;
+}
+
+.customizer-config * {
+  box-sizing: border-box;
 }
 
 .customizer-config header {
-  margin-bottom: 15px;
+  flex: 0 0 auto;
   padding-bottom: 10px;
-  border-bottom: 2px solid #ccc;
+  border-bottom: 2px solid var(--color-border);
 }
 
 .customizer-config header h2 {
   margin: 0 0 8px 0;
   font-size: 18px;
-  color: #1a1a1a;
 }
 
 .customizer-config header .notes {
   margin: 0;
   font-size: 12px;
-  color: #555;
+  color: var(--color-text-secondary);
   line-height: 1.4;
 }
 
-/* Section Styling */
+/* Section Styling - each section grows to share available height and
+   scrolls internally only once it runs out of room, instead of stopping at
+   a fixed pixel height regardless of how big the window is. */
 .customizer-config section {
-  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 120px;
   padding: 12px;
-  background: #f8f8f8;
-  border: 1px solid #999;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: #1a1a1a;
+  overflow-y: auto;
 }
 
 .customizer-config .section-header {
+  flex: 0 0 auto;
   display: flex;
   align-items: baseline;
   gap: 10px;
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .customizer-config .section-header h3 {
   margin: 0;
   font-size: 16px;
   font-weight: bold;
-  color: #1a1a1a;
 }
 
 /* Type Legend & Roll Key hint */
 .customizer-config .type-legend {
+  flex: 0 0 auto;
   margin: 0 0 12px 0;
   padding: 8px 10px;
-  background: #eef3f8;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 3px;
   font-size: 11px;
 }
@@ -316,63 +330,50 @@
 .customizer-config .type-legend-row dt {
   flex: 0 0 100px;
   font-weight: bold;
-  color: #1a1a1a;
 }
 
 .customizer-config .type-legend-row dd {
   margin: 0;
-  color: #444;
+  color: var(--color-text-secondary);
 }
 
 .customizer-config .roll-key-hint {
+  flex: 0 0 auto;
   margin: 0 0 12px 0;
+  color: var(--color-text-secondary);
 }
 
 .customizer-config .roll-key-hint code {
-  background: #eef3f8;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 3px;
   padding: 1px 4px;
   font-size: 11px;
 }
 
-/* Abilities Section */
-.customizer-config .abilities-section {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
 .customizer-config .ability-row {
+  flex: 0 0 auto;
   display: grid;
   grid-template-columns: 1.3fr 0.9fr 0.9fr 0.9fr auto;
   gap: 8px;
   align-items: end;
   margin-bottom: 8px;
   padding: 8px;
-  background: #ffffff;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 3px;
-  color: #1a1a1a;
 }
 
 .customizer-config .add-ability {
+  flex: 0 0 auto;
   width: 100%;
   margin-top: 8px;
 }
 
-/* Panels Section */
-.customizer-config .panels-section {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
 .customizer-config .panel-row {
-  border: 1px solid #999;
+  flex: 0 0 auto;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 10px;
   margin-bottom: 12px;
-  background: #ffffff;
-  color: #1a1a1a;
 }
 
 .customizer-config .row-head {
@@ -384,6 +385,7 @@
 }
 
 .customizer-config .add-panel {
+  flex: 0 0 auto;
   width: 100%;
   margin-top: 8px;
 }
@@ -393,75 +395,26 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
+  min-width: 0;
 }
 
 .customizer-config .stack label {
   font-size: 11px;
   font-weight: bold;
-  color: #444;
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
-.customizer-config input,
-.customizer-config select {
-  height: 28px;
-  line-height: 28px;
-  padding: 2px 6px;
-  background: #ffffff;
-  color: #1a1a1a;
-  border: 1px solid #999;
-  border-radius: 3px;
-  font-size: 13px;
-}
-
-.customizer-config input:focus,
-.customizer-config select:focus {
-  outline: 2px solid #4a90e2;
-  outline-offset: 0;
-}
-
-.customizer-config button {
-  height: 28px;
-  padding: 0 10px;
-  background: #e2e2e2;
-  color: #1a1a1a;
-  border: 1px solid #999;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.customizer-config button:hover {
-  background: #cfcfcf;
-}
-
-.customizer-config button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
 .customizer-config button.danger {
-  color: #c00;
-}
-
-.customizer-config button.danger:hover {
-  background: #fee;
+  color: var(--color-level-error);
 }
 
 .customizer-config button.primary {
-  background: #4a90e2;
-  color: #ffffff;
-  border-color: #3a7bc8;
   font-weight: bold;
 }
 
-.customizer-config button.primary:hover {
-  background: #3a7bc8;
-}
-
 .customizer-config .fields {
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--color-border);
   padding-top: 8px;
 }
 
@@ -476,10 +429,8 @@
   align-items: center;
   margin-bottom: 6px;
   padding: 6px;
-  background: #f8f8f8;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 3px;
-  color: #1a1a1a;
 }
 
 .customizer-config .add-field {
@@ -490,16 +441,17 @@
 .customizer-config .empty-state {
   padding: 20px;
   text-align: center;
-  color: #666;
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
 .customizer-config footer.actions {
+  flex: 0 0 auto;
   display: flex;
   gap: 8px;
   align-items: center;
   padding-top: 10px;
-  border-top: 2px solid #ccc;
+  border-top: 2px solid var(--color-border);
 }
 
 .customizer-config footer .spacer {

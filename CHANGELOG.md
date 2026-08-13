@@ -33,6 +33,15 @@
 - Panel fields no longer show their internal ID in the config dialog (they aren't
   usable in roll formulas, so it served no purpose). Added a one-line description
   for each ability/field type in the config dialog.
+- Reworked the config dialog's stylesheet to stop hardcoding its own colors and
+  instead rely on Foundry's native theme (the same `--color-*`/`--input-*`/
+  `--button-*` variables every other Foundry dialog uses), so it now matches
+  Foundry's actual look (light or dark) instead of a fixed white-card style.
+  Also fixed the dialog's content area not growing to fill a resized window:
+  it's now an explicit flex layout with `width: 100%`, and the two scrollable
+  sections share available height instead of stopping at a fixed pixel cap.
+- Reworded the Current/Max field-type description to use Sanity (an ability
+  without a modifier) as the example instead of HP.
 
 ## 2.0.0
 
