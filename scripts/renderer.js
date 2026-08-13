@@ -67,65 +67,109 @@ export function injectCustomFields (sheet, html) {
 }
 
 /**
- * Inject a single full-width separator into character-grid after lucky-roll.
- * Spans all 4 columns so it forms one unbroken dotted line, matching DCC's own row-separators.
+ * Insert newNode immediately after the last previously-injected customizer element
+ * inside grid (tracked via the [data-customizer-container] marker), falling back to
+ * after .lucky-roll (PC sheets only), then a plain append. Used to keep the separator
+ * -> abilities -> panels DOM order correct regardless of which blocks are present for
+ * a given actor.
  */
-function injectCustomSeparator (html) {
-  const characterGrid = html.find('.character-grid, .npc-grid').first()
-  if (characterGrid.length === 0) return
-  const luckyRoll = characterGrid.find('.lucky-roll')
-  const sep = $('<div class="customizer-row-separator" data-customizer-container="customizer-sep"></div>')
-  if (luckyRoll.length) {
-    luckyRoll.last().after(sep)
-  } else {
-    characterGrid.append(sep)
+function insertAfterLastCustomizerNode (grid, newNode) {
+  const lastCustom = grid.find('[data-customizer-container]').last()
+  if (lastCustom.length) {
+    lastCustom.after(newNode)
+    return
   }
+  const luckyRoll = grid.find('.lucky-roll')
+  if (luckyRoll.length) {
+    luckyRoll.last().after(newNode)
+    return
+  }
+  grid.append(newNode)
 }
 
 /**
- * Inject ability fields below Luck in the abilities area
+ * Inject a single full-width separator into character-grid/npc-grid after lucky-roll.
+ * Spans all columns so it forms one unbroken dotted line, matching DCC's own row-separators.
+ */
+function injectCustomSeparator (html) {
+  const grid = html.find('.character-grid, .npc-grid').first()
+  if (grid.length === 0) return
+  const sep = $('<div class="customizer-row-separator" data-customizer-container="customizer-sep"></div>')
+  insertAfterLastCustomizerNode(grid, sep)
+}
+
+/**
+ * Inject ability fields for the actor. PC sheets have a dedicated .ability-scores
+ * area to append into (below Luck); NPC sheets have no such area in the DCC system
+ * template, so custom abilities render as a full-width row inside .npc-grid instead.
  * @param {ActorSheet} sheet - The character sheet
  * @param {jQuery} html - The sheet HTML
  * @param {Array} abilities - Array of ability field configs
  * @param {Actor} actor - The actor
  */
 function injectAbilityFields (sheet, html, abilities, actor) {
-  console.log('dccrpg-character-sheet-customizer | injectAbilityFields called')
-  
-  // Find the abilities container
+  if (actor.type === 'NPC') {
+    injectNPCAbilityFields(html, abilities, actor)
+  } else {
+    injectPCAbilityFields(html, abilities, actor)
+  }
+}
+
+/**
+ * Append custom abilities directly into the PC sheet's .ability-scores container,
+ * below Luck, styled like core abilities.
+ */
+function injectPCAbilityFields (html, abilities, actor) {
   const abilitiesContainer = html.find('.ability-scores')
-  console.log('dccrpg-character-sheet-customizer | Found .ability-scores containers:', abilitiesContainer.length)
-  
   if (abilitiesContainer.length === 0) {
     console.warn('dccrpg-character-sheet-customizer | Could not find .ability-scores container')
     return
   }
-  
-  // Get stored values
+
   const customAbilities = getCustomAbilities(actor)
-  console.log('dccrpg-character-sheet-customizer | Custom abilities data:', JSON.stringify(customAbilities, null, 2))
-  
-  // Render each ability field and append directly to ability-scores container.
+
   // First ability gets 'customizer-first-ability' for the border-top separator line.
   abilities.forEach((ability, index) => {
-    console.log('dccrpg-character-sheet-customizer | Rendering ability:', ability.label, 'type:', ability.type, 'id:', ability.id)
     const renderer = getFieldRenderer(ability.type)
     const value = customAbilities[ability.id] || {}
-    console.log('dccrpg-character-sheet-customizer | Value for', ability.id, ':', JSON.stringify(value))
 
-    // Use renderAsAbility method for proper styling
-    const fieldHtml = renderer.renderAsAbility ?
-      renderer.renderAsAbility(ability, value) :
-      renderer.render(ability, value)
-
-    console.log('dccrpg-character-sheet-customizer | Generated HTML length:', fieldHtml.length)
+    const fieldHtml = renderer.renderAsAbility
+      ? renderer.renderAsAbility(ability, value)
+      : renderer.render(ability, value)
 
     const el = $(fieldHtml)
     if (index === 0) el.addClass('customizer-first-ability')
     abilitiesContainer.append(el)
   })
-  
-  console.log('dccrpg-character-sheet-customizer | Abilities injected successfully')
+}
+
+/**
+ * DCC's NPC sheet has no ability-scores area at all, so custom abilities render as a
+ * dedicated full-width row inside .npc-grid, reusing the same ability box HTML as PCs.
+ */
+function injectNPCAbilityFields (html, abilities, actor) {
+  const npcGrid = html.find('.npc-grid')
+  if (npcGrid.length === 0) {
+    console.warn('dccrpg-character-sheet-customizer | Could not find .npc-grid container')
+    return
+  }
+
+  const customAbilities = getCustomAbilities(actor)
+
+  const wrapper = $('<div class="customizer-npc-abilities" data-customizer-container="npc-abilities"></div>')
+
+  abilities.forEach(ability => {
+    const renderer = getFieldRenderer(ability.type)
+    const value = customAbilities[ability.id] || {}
+
+    const fieldHtml = renderer.renderAsAbility
+      ? renderer.renderAsAbility(ability, value)
+      : renderer.render(ability, value)
+
+    wrapper.append($(fieldHtml))
+  })
+
+  insertAfterLastCustomizerNode(npcGrid, wrapper)
 }
 
 /**
@@ -150,13 +194,6 @@ function injectPanels (sheet, html, panels, actor) {
     return
   }
 
-  // Insert after the separator; fall back to after lucky-roll, then append to grid
-  const luckyRoll = characterGrid.find('.lucky-roll')
-  const customSep = characterGrid.find('.customizer-row-separator')
-  let insertAfter = customSep.length ? customSep.last()
-    : luckyRoll.length ? luckyRoll.last()
-    : null
-
   panels.forEach(panel => {
     console.log('dccrpg-character-sheet-customizer | Creating panel:', panel.label)
 
@@ -172,12 +209,7 @@ function injectPanels (sheet, html, panels, actor) {
       })
     }
 
-    if (insertAfter) {
-      insertAfter.after(panelElement)
-      insertAfter = panelElement
-    } else {
-      characterGrid.append(panelElement)
-    }
+    insertAfterLastCustomizerNode(characterGrid, panelElement)
   })
 
   console.log('dccrpg-character-sheet-customizer | Panels injected successfully')

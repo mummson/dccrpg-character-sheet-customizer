@@ -84,6 +84,110 @@
   justify-items: start;
 }
 
+/* ===== NPC: Custom Panels & Separator ===== */
+/* DCC's NPC tab section never gets the "character" class (a template omission in the
+   DCC system itself), so the .dcc .character-scoped rules above never match on NPC
+   sheets. This block mirrors them for .npc-grid, the same way DCC's own stylesheet
+   keeps its .npc-grid rules as a separate top-level block rather than nesting them
+   under .character. .npc-grid is a 12-column grid (unlike character-grid's 4-column
+   layout), so custom content spans the full width instead of aligning under Luck. */
+.dcc .npc-grid .customizer-panel {
+  border: var(--system-frame-border);
+  border-top: 0;
+  display: grid;
+  font-size: 12px;
+  grid-column: 1 / -1;
+  grid-template-rows: 19px auto;
+  min-height: 59px;
+  text-align: left;
+}
+
+.dcc .npc-grid:has(.customizer-panel, .customizer-npc-abilities) {
+  height: auto;
+  min-height: 100%;
+  align-content: start;
+}
+
+.dcc .npc-grid .customizer-row-separator {
+  border-bottom: 2px dotted var(--system-secondary-color);
+  grid-column: 1 / -1;
+  height: 9px;
+  margin-bottom: 3px;
+}
+
+.dcc .npc-grid .customizer-panel label.box-title {
+  text-align: left;
+  padding-left: 3px;
+  padding-top: 2px;
+  font-size: 14px;
+  font-weight: normal;
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+  font-family: var(--system-label-font), serif;
+}
+
+.dcc .npc-grid .customizer-panel-content {
+  background: none;
+  border: 0;
+  padding: 5px 8px;
+  display: grid;
+  grid-template-columns: max-content minmax(100px, 1fr);
+  gap: 6px 12px;
+  align-items: center;
+  justify-items: start;
+}
+
+/* ===== NPC: Custom Abilities Row ===== */
+/* NPC sheets have no .ability-scores area at all, so custom abilities render as a
+   full-width row of ability-box-styled tiles inside .npc-grid instead. DCC's own
+   .ability-box styling is scoped to ".ability-scores .ability-box" so it never
+   applies here - this replicates just the parts needed (internal grid layout, the
+   bordered score tile) scoped to our own wrapper instead. */
+.dcc .npc-grid .customizer-npc-abilities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+
+.dcc .npc-grid .customizer-npc-abilities .customizer-ability-box {
+  align-items: center;
+  display: grid;
+  flex: 0 0 auto;
+  font-size: 14px;
+  grid-template-columns: 85px 37px 60px;
+  grid-template-rows: 19px 20px 20px;
+  min-height: 68px;
+  width: 182px;
+}
+
+.dcc .npc-grid .customizer-npc-abilities .customizer-ability-box input {
+  border-width: 0 0 1px 0;
+  font-size: 14px;
+  margin-right: 3px;
+}
+
+.dcc .npc-grid .customizer-npc-abilities .customizer-ability-box > label {
+  grid-column-end: span 2;
+}
+
+.dcc .npc-grid .customizer-npc-abilities .customizer-ability-box .ability-score {
+  align-self: stretch;
+  border: 5px solid var(--system-border-color);
+  display: grid;
+  grid-row-end: span 3;
+  position: relative;
+}
+
+.dcc .npc-grid .customizer-npc-abilities .customizer-ability-box .ability-score input {
+  align-self: center;
+  justify-self: center;
+  border: 0;
+  font-size: 30px;
+  height: 46px;
+  width: 47px;
+}
+
 /* ===== Field Styling ===== */
 .customizer-field {
   display: contents; /* Makes children participate in parent grid */
