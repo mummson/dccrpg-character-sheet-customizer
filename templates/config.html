@@ -211,26 +211,35 @@
   </footer>
 
   <style>
-/* Scoped styles for config dialog */
+/* Scoped styles for config dialog.
+   Colors are intentionally hardcoded rather than pulled from Foundry's
+   --color-* theme variables: this dialog forces light card backgrounds
+   regardless of the active core theme, and relying on theme variables for
+   text color (while hardcoding light backgrounds) produced near-invisible
+   text once Foundry's v13+ dark UI theme redefined those variables for use
+   on dark backgrounds. */
 .customizer-config {
   padding: 10px;
+  background: #ffffff;
+  color: #1a1a1a;
 }
 
 .customizer-config header {
   margin-bottom: 15px;
   padding-bottom: 10px;
-  border-bottom: 2px solid var(--color-border-light-tertiary, #ccc);
+  border-bottom: 2px solid #ccc;
 }
 
 .customizer-config header h2 {
   margin: 0 0 8px 0;
   font-size: 18px;
+  color: #1a1a1a;
 }
 
 .customizer-config header .notes {
   margin: 0;
   font-size: 12px;
-  color: var(--color-text-dark-secondary, #666);
+  color: #555;
   line-height: 1.4;
 }
 
@@ -238,9 +247,10 @@
 .customizer-config section {
   margin-bottom: 20px;
   padding: 12px;
-  background: var(--color-bg-light, #f8f8f8);
-  border: 1px solid var(--color-border-light, #999);
+  background: #f8f8f8;
+  border: 1px solid #999;
   border-radius: 4px;
+  color: #1a1a1a;
 }
 
 .customizer-config .section-header {
@@ -249,13 +259,14 @@
   gap: 10px;
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--color-border-light-tertiary, #ddd);
+  border-bottom: 1px solid #ddd;
 }
 
 .customizer-config .section-header h3 {
   margin: 0;
   font-size: 16px;
   font-weight: bold;
+  color: #1a1a1a;
 }
 
 /* Abilities Section */
@@ -271,9 +282,10 @@
   align-items: end;
   margin-bottom: 8px;
   padding: 8px;
-  background: white;
-  border: 1px solid var(--color-border-light-tertiary, #ddd);
+  background: #ffffff;
+  border: 1px solid #ddd;
   border-radius: 3px;
+  color: #1a1a1a;
 }
 
 .customizer-config .add-ability {
@@ -288,11 +300,12 @@
 }
 
 .customizer-config .panel-row {
-  border: 1px solid var(--color-border-light, #999);
+  border: 1px solid #999;
   border-radius: 4px;
   padding: 10px;
   margin-bottom: 12px;
-  background: white;
+  background: #ffffff;
+  color: #1a1a1a;
 }
 
 .customizer-config .row-head {
@@ -318,19 +331,19 @@
 .customizer-config .stack label {
   font-size: 11px;
   font-weight: bold;
-  color: var(--color-text-dark-secondary, #555);
+  color: #444;
   margin: 0;
 }
 
 .customizer-config .id-display {
   display: block;
   padding: 4px 6px;
-  background: var(--color-bg-light, #f0f0f0);
-  border: 1px solid var(--color-border-light-tertiary, #ddd);
+  background: #f0f0f0;
+  border: 1px solid #ddd;
   border-radius: 3px;
   font-family: monospace;
   font-size: 11px;
-  color: var(--color-text-dark-secondary, #666);
+  color: #666;
   word-break: break-all;
 }
 
@@ -339,23 +352,25 @@
   height: 28px;
   line-height: 28px;
   padding: 2px 6px;
-  background: white;
-  border: 1px solid var(--color-border-light, #999);
+  background: #ffffff;
+  color: #1a1a1a;
+  border: 1px solid #999;
   border-radius: 3px;
   font-size: 13px;
 }
 
 .customizer-config input:focus,
 .customizer-config select:focus {
-  outline: 2px solid var(--color-focus-outline, #4a90e2);
+  outline: 2px solid #4a90e2;
   outline-offset: 0;
 }
 
 .customizer-config button {
   height: 28px;
   padding: 0 10px;
-  background: var(--color-bg-btn, #ddd);
-  border: 1px solid var(--color-border-light, #999);
+  background: #e2e2e2;
+  color: #1a1a1a;
+  border: 1px solid #999;
   border-radius: 3px;
   cursor: pointer;
   font-size: 12px;
@@ -363,7 +378,7 @@
 }
 
 .customizer-config button:hover {
-  background: var(--color-bg-btn-hover, #ccc);
+  background: #cfcfcf;
 }
 
 .customizer-config button:disabled {
@@ -372,26 +387,26 @@
 }
 
 .customizer-config button.danger {
-  color: var(--color-text-light-error, #c00);
+  color: #c00;
 }
 
 .customizer-config button.danger:hover {
-  background: var(--color-bg-light-error, #fee);
+  background: #fee;
 }
 
 .customizer-config button.primary {
-  background: var(--color-bg-btn-primary, #4a90e2);
-  color: white;
-  border-color: var(--color-border-dark, #3a7bc8);
+  background: #4a90e2;
+  color: #ffffff;
+  border-color: #3a7bc8;
   font-weight: bold;
 }
 
 .customizer-config button.primary:hover {
-  background: var(--color-bg-btn-primary-hover, #3a7bc8);
+  background: #3a7bc8;
 }
 
 .customizer-config .fields {
-  border-top: 1px solid var(--color-border-light-tertiary, #ddd);
+  border-top: 1px solid #ddd;
   padding-top: 8px;
 }
 
@@ -406,9 +421,10 @@
   align-items: center;
   margin-bottom: 6px;
   padding: 6px;
-  background: var(--color-bg-light, #f8f8f8);
-  border: 1px solid var(--color-border-light-tertiary, #ddd);
+  background: #f8f8f8;
+  border: 1px solid #ddd;
   border-radius: 3px;
+  color: #1a1a1a;
 }
 
 .customizer-config .add-field {
@@ -419,7 +435,7 @@
 .customizer-config .empty-state {
   padding: 20px;
   text-align: center;
-  color: var(--color-text-dark-secondary, #666);
+  color: #666;
   font-style: italic;
 }
 
@@ -428,7 +444,7 @@
   gap: 8px;
   align-items: center;
   padding-top: 10px;
-  border-top: 2px solid var(--color-border-light-tertiary, #ccc);
+  border-top: 2px solid #ccc;
 }
 
 .customizer-config footer .spacer {
