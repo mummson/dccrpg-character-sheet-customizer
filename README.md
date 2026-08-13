@@ -9,13 +9,13 @@ Add custom fields and abilities to your DCC RPG character sheets in Foundry VTT!
 1. **Text** - Simple text input field
 2. **Number** - Numeric input field
 3. **Current/Max** - Track resources with current and maximum values (appears in abilities section)
-4. **Stepper** - Number field with increment/decrement buttons
+4. **Counter** - Number field with increment/decrement buttons
 5. **Custom Ability** - Full ability score with value, max, and auto-calculated modifier (appears in abilities section)
 
 ### Smart Placement
 
 - **Ability Fields** (Custom Ability & Current/Max) automatically appear in the abilities section below Luck, styled to match core abilities
-- **Panel Fields** (Text, Number, Stepper) appear in configurable panels at the top or bottom of character sheets
+- **Panel Fields** (Text, Number, Counter) appear in configurable panels at the top or bottom of character sheets
 
 ### Roll Integration
 
@@ -92,9 +92,9 @@ aren't usable in roll formulas, so they don't have one.
 - Use in rolls: `@customAbilities.corruption.value` (current value) or
   `@customAbilities.corruption.max`
 
-**Stepper (Luck Pool)**
+**Counter (Luck Pool)**
 - Label: `Luck Pool`
-- Type: `Stepper`
+- Type: `Counter`
 - Easy increment/decrement buttons
 - Appears in panel
 

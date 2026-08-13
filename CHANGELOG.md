@@ -42,6 +42,9 @@
   sections share available height instead of stopping at a fixed pixel cap.
 - Reworded the Current/Max field-type description to use Sanity (an ability
   without a modifier) as the example instead of HP.
+- Renamed the "Stepper" field type to "Counter" in the config dialog and docs -
+  display label only, the internal type value is unchanged, so existing panel
+  fields of this type and their saved values are unaffected.
 
 ## 2.0.0
 

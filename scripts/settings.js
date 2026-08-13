@@ -91,7 +91,7 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
         },
         {
           value: FIELD_TYPES.STEPPER,
-          label: 'Stepper',
+          label: 'Counter',
           description: 'A number with +/- buttons for quick adjustments, like a Luck Pool.'
         }
       ],
