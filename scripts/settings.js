@@ -2,11 +2,13 @@
  * Configuration dialog for DCC RPG Character Sheet Customizer
  */
 
-import { generateId } from './util.js'
+import { generateId, slugifyRollKey, RESERVED_ROLL_KEYS } from './util.js'
 import { getModuleConfig, setModuleConfig } from './store.js'
 import { FIELD_TYPES } from './fields.js'
 
 const { ApplicationV2, DialogV2, HandlebarsApplicationMixin } = foundry.applications.api
+
+const ROLL_KEY_PATTERN = /^[a-z][a-z0-9_]*$/
 
 export class CustomizerConfigDialog extends HandlebarsApplicationMixin(ApplicationV2) {
   constructor (options = {}) {
@@ -14,6 +16,14 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
     const config = getModuleConfig()
     this.abilities = config.abilities || []
     this.panels = config.panels || []
+
+    // Abilities saved before Roll Key existed have none - suggest one from the
+    // label so the field isn't blank, without touching stored config until saved.
+    this.abilities.forEach(ability => {
+      if (!ability.rollKey) {
+        ability.rollKey = slugifyRollKey(ability.label || ability.id)
+      }
+    })
   }
 
   static DEFAULT_OPTIONS = {
@@ -57,13 +67,33 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
       abilities: this.abilities,
       panels: this.panels,
       abilityTypes: [
-        { value: FIELD_TYPES.CUSTOM_ABILITY, label: 'Custom Ability' },
-        { value: FIELD_TYPES.CURRENT_MAX, label: 'Current/Max' }
+        {
+          value: FIELD_TYPES.CUSTOM_ABILITY,
+          label: 'Custom Ability',
+          description: 'A full ability score like STR or LCK: a Value, a Maximum, and an auto-calculated Modifier usable in rolls.'
+        },
+        {
+          value: FIELD_TYPES.CURRENT_MAX,
+          label: 'Current / Max',
+          description: 'A resource tracker with no modifier, like HP: just a Current value and a Maximum.'
+        }
       ],
       panelFieldTypes: [
-        { value: FIELD_TYPES.SIMPLE, label: 'Text' },
-        { value: FIELD_TYPES.SIMPLE_NUM, label: 'Number' },
-        { value: FIELD_TYPES.STEPPER, label: 'Stepper' }
+        {
+          value: FIELD_TYPES.SIMPLE,
+          label: 'Text',
+          description: 'A single line of free text, for notes or short labels.'
+        },
+        {
+          value: FIELD_TYPES.SIMPLE_NUM,
+          label: 'Number',
+          description: 'A plain number you type in directly.'
+        },
+        {
+          value: FIELD_TYPES.STEPPER,
+          label: 'Stepper',
+          description: 'A number with +/- buttons for quick adjustments, like a Luck Pool.'
+        }
       ],
       appliesToOptions: [
         { value: 'both', label: 'Both PC & NPC' },
@@ -103,11 +133,13 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
    * Add a new custom ability
    */
   static async #onAddAbility (event, target) {
+    const label = 'New Ability'
     this.abilities.push({
       id: generateId('ability'),
-      label: 'New Ability',
+      label,
       type: FIELD_TYPES.CUSTOM_ABILITY,
-      appliesTo: 'both'
+      appliesTo: 'both',
+      rollKey: slugifyRollKey(label)
     })
     this.render()
   }
@@ -231,9 +263,14 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
       abilityData[abilityIndex][prop] = value
     }
 
-    // Convert to array
+    // Convert to array, normalizing the roll key (trim + lowercase so casing
+    // differences don't cause spurious duplicate/reserved-word mismatches)
     for (const index in abilityData) {
-      abilities.push(abilityData[index])
+      const ability = abilityData[index]
+      if (typeof ability.rollKey === 'string') {
+        ability.rollKey = ability.rollKey.trim().toLowerCase()
+      }
+      abilities.push(ability)
     }
 
     // Parse panels
@@ -301,6 +338,7 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
 
     // Validate abilities
     const abilityIds = new Set()
+    const rollKeys = new Set()
     for (const ability of config.abilities) {
       if (!ability.label || ability.label.trim() === '') {
         return { valid: false, error: 'All abilities must have a label' }
@@ -313,6 +351,20 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
       if (ability.appliesTo && !validScopes.includes(ability.appliesTo)) {
         return { valid: false, error: `Invalid scope: ${ability.appliesTo}` }
       }
+
+      if (!ability.rollKey) {
+        return { valid: false, error: `"${ability.label}" needs a Roll Key` }
+      }
+      if (!ROLL_KEY_PATTERN.test(ability.rollKey)) {
+        return { valid: false, error: `Roll Key "${ability.rollKey}" must start with a letter and contain only lowercase letters, numbers, and underscores` }
+      }
+      if (RESERVED_ROLL_KEYS.includes(ability.rollKey)) {
+        return { valid: false, error: `Roll Key "${ability.rollKey}" is already used by the DCC system and can't be reused` }
+      }
+      if (rollKeys.has(ability.rollKey)) {
+        return { valid: false, error: `Duplicate Roll Key: "${ability.rollKey}"` }
+      }
+      rollKeys.add(ability.rollKey)
 
       if (abilityIds.has(ability.id)) {
         return { valid: false, error: 'Duplicate ability ID detected' }

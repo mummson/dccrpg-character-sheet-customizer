@@ -5,6 +5,7 @@
 
 import { registerSettings, CustomizerConfigDialog } from './settings.js'
 import { injectCustomFields } from './renderer.js'
+import { getAbilitiesConfig } from './store.js'
 
 const MODULE_ID = 'dccrpg-character-sheet-customizer'
 
@@ -91,75 +92,53 @@ function handleSheetRender (app, html, data, isV2) {
 }
 
 /**
- * Hook to add actor roll data for custom abilities
- * This allows @sanityMod syntax in rolls
+ * Add each custom ability's data to an actor's roll data, keyed by its
+ * configured Roll Key (e.g. @sanityMod, @customAbilities.sanity.value)
+ * rather than its internal storage ID. Abilities saved before Roll Key
+ * existed fall back to their storage ID, unchanged from prior behavior.
+ * @param {Actor} actor - The actor
+ * @param {Object} rollData - The roll data object to extend in place
  */
-Hooks.on('prepareDCCActorRollData', function (actor, rollData) {
-  if (!actor) return
-  
-  try {
-    const customAbilities = actor.getFlag(MODULE_ID, 'abilities') || {}
-    
-    // Add each custom ability to roll data
-    for (const [abilityId, ability] of Object.entries(customAbilities)) {
-      // Add modifier shorthand (e.g., @sanityMod)
-      const modKey = `${abilityId}Mod`
-      rollData[modKey] = ability.mod || 0
-      
-      // Add full ability data (e.g., @customAbilities.sanity.value)
-      if (!rollData.customAbilities) {
-        rollData.customAbilities = {}
-      }
-      rollData.customAbilities[abilityId] = {
-        value: ability.value || 10,
-        max: ability.max || 10,
-        mod: ability.mod || 0
-      }
+function injectCustomAbilityRollData (actor, rollData) {
+  const storedAbilities = actor.getFlag(MODULE_ID, 'abilities') || {}
+  const abilityConfigs = getAbilitiesConfig()
+
+  rollData.customAbilities = rollData.customAbilities || {}
+
+  for (const config of abilityConfigs) {
+    const stored = storedAbilities[config.id] || {}
+    const rollKey = config.rollKey || config.id
+    const mod = stored.mod ?? 0
+
+    rollData[`${rollKey}Mod`] = mod
+    rollData.customAbilities[rollKey] = {
+      // Current/Max fields store {current, max} rather than {value, max}
+      value: stored.value ?? stored.current ?? 10,
+      max: stored.max ?? 10,
+      mod
     }
-  } catch (err) {
-    console.error(`${MODULE_ID} | Error preparing roll data:`, err)
   }
-})
+}
 
 /**
- * Alternative hook for systems that don't have prepareDCCActorRollData
- * Wraps the getRollData method to inject custom abilities
+ * Wrap the Actor's getRollData method to inject custom ability roll data.
+ * DCC does not fire a dedicated hook for this, so the actual method is
+ * wrapped directly (confirmed by reading the DCC system source: it calls
+ * actor.getRollData() itself, there is no "prepareDCCActorRollData" hook).
  */
 Hooks.once('ready', function () {
-  // Check if the DCC system has the custom hook
-  const hasDCCHook = Hooks.events['prepareDCCActorRollData']?.length > 0
-  
-  if (!hasDCCHook) {
-    console.log(`${MODULE_ID} | Using getRollData wrapper for roll data injection`)
-    
-    // Wrap the Actor's getRollData method
-    const originalGetRollData = CONFIG.Actor.documentClass.prototype.getRollData
-    
-    CONFIG.Actor.documentClass.prototype.getRollData = function () {
-      const rollData = originalGetRollData.call(this)
-      
-      try {
-        const customAbilities = this.getFlag(MODULE_ID, 'abilities') || {}
-        
-        for (const [abilityId, ability] of Object.entries(customAbilities)) {
-          const modKey = `${abilityId}Mod`
-          rollData[modKey] = ability.mod || 0
-          
-          if (!rollData.customAbilities) {
-            rollData.customAbilities = {}
-          }
-          rollData.customAbilities[abilityId] = {
-            value: ability.value || 10,
-            max: ability.max || 10,
-            mod: ability.mod || 0
-          }
-        }
-      } catch (err) {
-        console.error(`${MODULE_ID} | Error in getRollData wrapper:`, err)
-      }
-      
-      return rollData
+  const originalGetRollData = CONFIG.Actor.documentClass.prototype.getRollData
+
+  CONFIG.Actor.documentClass.prototype.getRollData = function () {
+    const rollData = originalGetRollData.call(this)
+
+    try {
+      injectCustomAbilityRollData(this, rollData)
+    } catch (err) {
+      console.error(`${MODULE_ID} | Error in getRollData wrapper:`, err)
     }
+
+    return rollData
   }
 })
 

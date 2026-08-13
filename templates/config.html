@@ -10,7 +10,21 @@
       <h3>Custom Abilities</h3>
       <span class="small muted">Appear below Luck, styled like core abilities</span>
     </div>
-    
+
+    <dl class="type-legend">
+      {{#each abilityTypes as |typeOption|}}
+      <div class="type-legend-row">
+        <dt>{{typeOption.label}}</dt>
+        <dd>{{typeOption.description}}</dd>
+      </div>
+      {{/each}}
+    </dl>
+    <p class="roll-key-hint small muted">
+      <strong>Roll Key</strong> is what you type in roll formulas, e.g. a Roll Key of
+      <code>sanity</code> gives you <code>@sanityMod</code> and
+      <code>@customAbilities.sanity.value</code>. Must be unique.
+    </p>
+
     {{#if abilities.length}}
       {{#each abilities as |ability index|}}
       <div class="ability-row" data-ability-index="{{index}}" data-ability-id="{{ability.id}}">
@@ -54,8 +68,17 @@
         </div>
 
         <div class="stack">
-          <label class="small muted">ID</label>
-          <span class="id-display small muted">{{ability.id}}</span>
+          <label for="ability-{{index}}-rollKey" title="Used in roll formulas, e.g. @{{ability.rollKey}}Mod">Roll Key</label>
+          <input
+            type="text"
+            id="ability-{{index}}-rollKey"
+            name="abilities[{{index}}].rollKey"
+            value="{{ability.rollKey}}"
+            placeholder="sanity"
+            pattern="[a-z][a-z0-9_]*"
+            title="Lowercase letters, numbers, and underscores only, starting with a letter. Used in roll formulas as @keyMod."
+            required
+          >
         </div>
 
         <button
@@ -84,7 +107,16 @@
       <h3>Custom Panels</h3>
       <span class="small muted">Appear at bottom of character sheet</span>
     </div>
-    
+
+    <dl class="type-legend">
+      {{#each panelFieldTypes as |typeOption|}}
+      <div class="type-legend-row">
+        <dt>{{typeOption.label}}</dt>
+        <dd>{{typeOption.description}}</dd>
+      </div>
+      {{/each}}
+    </dl>
+
     {{#if panels.length}}
       {{#each panels as |panel index|}}
       <div class="panel-row" data-panel-index="{{index}}" data-panel-id="{{panel.id}}">
@@ -155,11 +187,7 @@
                   {{/each}}
                 </select>
               </div>
-              
-              <div class="stack">
-                <span class="id-display small muted">{{field.id}}</span>
-              </div>
-              
+
               <button
                 type="button"
                 class="delete-field danger"
@@ -269,6 +297,45 @@
   color: #1a1a1a;
 }
 
+/* Type Legend & Roll Key hint */
+.customizer-config .type-legend {
+  margin: 0 0 12px 0;
+  padding: 8px 10px;
+  background: #eef3f8;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+.customizer-config .type-legend-row {
+  display: flex;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.customizer-config .type-legend-row dt {
+  flex: 0 0 100px;
+  font-weight: bold;
+  color: #1a1a1a;
+}
+
+.customizer-config .type-legend-row dd {
+  margin: 0;
+  color: #444;
+}
+
+.customizer-config .roll-key-hint {
+  margin: 0 0 12px 0;
+}
+
+.customizer-config .roll-key-hint code {
+  background: #eef3f8;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 11px;
+}
+
 /* Abilities Section */
 .customizer-config .abilities-section {
   max-height: 300px;
@@ -333,18 +400,6 @@
   font-weight: bold;
   color: #444;
   margin: 0;
-}
-
-.customizer-config .id-display {
-  display: block;
-  padding: 4px 6px;
-  background: #f0f0f0;
-  border: 1px solid #ddd;
-  border-radius: 3px;
-  font-family: monospace;
-  font-size: 11px;
-  color: #666;
-  word-break: break-all;
 }
 
 .customizer-config input,
@@ -416,7 +471,7 @@
 
 .customizer-config .field-row {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr auto;
+  grid-template-columns: 1.5fr 1fr auto;
   gap: 6px;
   align-items: center;
   margin-bottom: 6px;

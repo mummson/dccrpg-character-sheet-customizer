@@ -60,6 +60,54 @@ export function slugify (text) {
 }
 
 /**
+ * Convert a string into a roll-formula-safe key: lowercase letters, numbers,
+ * and underscores only, always starting with a letter. Unlike slugify(), this
+ * never produces hyphens - "@my-key" would parse as subtraction in a roll
+ * formula, so hyphens are unusable for roll keys.
+ * @param {string} text - The text to convert (typically a field's label)
+ * @returns {string} A key safe to use as `@keyMod` / `@customAbilities.key.value`
+ * @example slugifyRollKey("Luck Pool") => "luck_pool"
+ * @example slugifyRollKey("3rd Eye") => "ability_3rd_eye"
+ */
+export function slugifyRollKey (text) {
+  let key = text
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+/, '')
+    .replace(/_+$/, '')
+
+  if (!key || !/^[a-z]/.test(key)) {
+    key = `ability_${key}`.replace(/_+$/, '')
+  }
+
+  return key
+}
+
+/**
+ * Roll-data keys already used by the DCC system itself (system data categories
+ * spread onto actor.getRollData(), plus the shorthand aliases DCC's
+ * RollDataMixin adds - str/agl/sta/per/int/lck, saves, ac/hp/speed/etc.), and
+ * by this module's own "customAbilities" namespace. A custom ability's Roll
+ * Key can't reuse any of these, or it would silently shadow real DCC roll
+ * data instead of adding a new formula variable.
+ * Source: systems/dcc/module/actor/roll-data-mixin.mjs and
+ * systems/dcc/module/data/actor/{base-actor,player-data}.mjs
+ */
+export const RESERVED_ROLL_KEYS = [
+  // Top-level system data categories spread onto roll data
+  'abilities', 'abilitylog', 'attributes', 'details', 'saves', 'currency', 'skills', 'config', 'class',
+  // DCC's own roll-data shorthand aliases
+  'str', 'agi', 'agl', 'sta', 'per', 'int', 'lck', 'initiative',
+  'maxstr', 'maxagi', 'maxagl', 'maxsta', 'maxper', 'maxint', 'maxlck',
+  'ref', 'frt', 'wil', 'ac', 'check', 'speed', 'hp', 'maxhp',
+  'level', 'cl', 'ab', 'mab', 'mad', 'rab', 'rad', 'xp',
+  // This module's own roll-data namespace
+  'customabilities'
+]
+
+/**
  * Debounce a function call
  * @param {Function} func - The function to debounce
  * @param {number} wait - Milliseconds to wait before executing

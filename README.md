@@ -21,8 +21,11 @@ Add custom fields and abilities to your DCC RPG character sheets in Foundry VTT!
 
 Custom abilities are fully integrated with the DCC roll system:
 - Roll ability checks by clicking the ability name
-- Use in formulas: `@sanityMod` or `@customAbilities.sanity.value`
+- Each custom ability has an editable **Roll Key** (e.g. `sanity`) used in formulas:
+  `@sanityMod` or `@customAbilities.sanity.value`
 - Modifiers auto-calculate using DCC ability score table (3-24)
+- Roll Keys can't collide with each other or with DCC's own roll data (`str`, `hp`,
+  `ac`, etc.) — the config dialog validates this when you save
 
 ### PC / NPC Scoping
 
@@ -63,16 +66,19 @@ https://github.com/mummson/dccrpg-character-sheet-customizer/releases/latest/dow
 4. Click **Add Field** to add fields to the panel
 5. Configure each field:
    - **Label**: Display name
-   - **Type**: Choose from 5 field types
-   - **ID**: Auto-generated (used for roll formulas)
+   - **Type**: Choose from 5 field types (each type has a one-line description in
+     the dialog to help you pick)
 
-Custom abilities have the same **Applies To** option, next to their type selector.
+Custom abilities have the same **Applies To** option, next to their type selector,
+plus a **Roll Key** (see Roll Integration above) instead of a Type ID — panel fields
+aren't usable in roll formulas, so they don't have one.
 
 ### Field Type Examples
 
 **Custom Ability (Sanity)**
 - Label: `Sanity`
 - Type: `Custom Ability`
+- Roll Key: `sanity`
 - Creates a full ability score with modifier
 - Appears below Luck in abilities section
 - Use in rolls: `@sanityMod`
@@ -80,9 +86,11 @@ Custom abilities have the same **Applies To** option, next to their type selecto
 **Current/Max (Corruption)**
 - Label: `Corruption`
 - Type: `Current/Max`
-- Track current and max values
+- Roll Key: `corruption`
+- Track current and max values (no modifier)
 - Appears below Luck in abilities section
-- Use in rolls: `@customAbilities.corruption.current`
+- Use in rolls: `@customAbilities.corruption.value` (current value) or
+  `@customAbilities.corruption.max`
 
 **Stepper (Luck Pool)**
 - Label: `Luck Pool`
@@ -109,7 +117,7 @@ Custom abilities have the same **Applies To** option, next to their type selecto
 1d6 + @sanityMod damage
 
 // Complex formulas
-1d20 + @sanityMod + @lck - @customAbilities.corruption.current
+1d20 + @sanityMod + @lck - @customAbilities.corruption.value
 ```
 
 ## Technical Details
@@ -142,9 +150,9 @@ Custom abilities have the same **Applies To** option, next to their type selecto
 
 ### Roll Formulas Not Working
 
-- Custom ability IDs are case-sensitive
-- Use exact ID from configuration (shown as readonly field)
-- Format: `@abilityIdMod` or `@customAbilities.abilityId.value`
+- Use the exact **Roll Key** shown in the ability's row in the config dialog
+- Format: `@rollKeyMod` or `@customAbilities.rollKey.value`
+- Roll Keys are always lowercase — the dialog normalizes casing automatically
 
 ### Styling Issues
 

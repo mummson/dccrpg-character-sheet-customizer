@@ -14,6 +14,25 @@
   custom panel, so a GM can scope a custom field to just player characters, just
   NPCs, or both. Existing configurations are unaffected — anything saved before this
   option existed continues to render everywhere, exactly as before.
+- Fixed the config dialog rendering with unreadable pale text on white card
+  backgrounds under Foundry's dark UI theme.
+- Replaced the auto-generated ID shown for each custom ability with an editable
+  **Roll Key** (e.g. `sanity`), validated for uniqueness and against DCC's own
+  reserved roll-data words (`str`, `hp`, `ac`, etc.). The internal storage ID is
+  unchanged and keeps owning each actor's saved values — only the roll-formula-facing
+  key is renameable. Abilities saved before this feature existed get a suggested key
+  auto-filled from their label the next time the config dialog is opened.
+- Fixed roll data for custom abilities actually being keyed by their Roll Key
+  (previously the unusable auto-generated ID, so `@sanityMod`-style formulas never
+  really worked). Also fixed Current/Max abilities exposing the wrong property in
+  roll data (`.value` was always reading undefined and defaulting to 10 instead of
+  the actual current value).
+- Removed the `prepareDCCActorRollData` hook listener — confirmed dead code, DCC
+  never fires a hook by that name. Roll data injection now happens solely through
+  the `getRollData()` wrapper, which is what was actually running all along.
+- Panel fields no longer show their internal ID in the config dialog (they aren't
+  usable in roll formulas, so it served no purpose). Added a one-line description
+  for each ability/field type in the config dialog.
 
 ## 2.0.0
 
