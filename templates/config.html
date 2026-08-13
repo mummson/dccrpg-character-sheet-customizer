@@ -1,4 +1,4 @@
-<form class="customizer-config">
+<div class="customizer-config">
   <header>
     <h2>Custom Fields Configuration</h2>
     <p class="notes">Configure custom abilities and panels for your character sheets. Custom abilities appear below Luck in the abilities section. Panels appear at the bottom of the sheet.</p>
@@ -46,9 +46,10 @@
           <span class="id-display small muted">{{ability.id}}</span>
         </div>
         
-        <button 
-          type="button" 
-          class="delete-ability danger" 
+        <button
+          type="button"
+          class="delete-ability danger"
+          data-action="deleteAbility"
           data-ability-index="{{index}}"
           title="Delete Ability"
         >
@@ -59,8 +60,8 @@
     {{else}}
       <div class="empty-state small">No custom abilities yet. Add one below.</div>
     {{/if}}
-    
-    <button type="button" class="add-ability">
+
+    <button type="button" class="add-ability" data-action="addAbility">
       <i class="fas fa-plus"></i> Add Custom Ability
     </button>
   </section>
@@ -91,9 +92,10 @@
             >
           </div>
           
-          <button 
-            type="button" 
-            class="delete-panel danger" 
+          <button
+            type="button"
+            class="delete-panel danger"
+            data-action="deletePanel"
             data-panel-index="{{index}}"
             title="Delete Panel"
           >
@@ -134,9 +136,10 @@
                 <span class="id-display small muted">{{field.id}}</span>
               </div>
               
-              <button 
-                type="button" 
-                class="delete-field danger" 
+              <button
+                type="button"
+                class="delete-field danger"
+                data-action="deleteField"
                 data-panel-index="{{@../index}}"
                 data-field-index="{{fieldIndex}}"
                 title="Delete Field"
@@ -148,10 +151,11 @@
           {{else}}
             <div class="empty-state small muted">No fields yet. Add one below.</div>
           {{/if}}
-          
-          <button 
-            type="button" 
-            class="add-field" 
+
+          <button
+            type="button"
+            class="add-field"
+            data-action="addField"
             data-panel-index="{{index}}"
           >
             <i class="fas fa-plus"></i> Add Field
@@ -165,23 +169,23 @@
       </div>
     {{/if}}
     
-    <button type="button" class="add-panel">
+    <button type="button" class="add-panel" data-action="addPanel">
       <i class="fas fa-plus"></i> Add Panel
     </button>
   </section>
 
   <footer class="actions">
-    <button type="button" class="reset-config danger">
+    <button type="button" class="reset-config danger" data-action="resetConfig">
       <i class="fas fa-undo"></i> Reset All
     </button>
-    
+
     <div class="spacer"></div>
-    
+
     <button type="submit" class="primary">
       <i class="fas fa-save"></i> Save Configuration
     </button>
   </footer>
-</form>
+</div>
 
 <style>
 /* Scoped styles for config dialog */
