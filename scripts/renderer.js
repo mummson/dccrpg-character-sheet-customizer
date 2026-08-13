@@ -291,12 +291,14 @@ function attachEventListeners (html, actor) {
     }
     
     let value = input.val()
-    
-    // Handle number inputs
-    if (input.attr('data-dtype') === 'Number' || input.attr('type') === 'number') {
+
+    // Handle checkboxes (Toggle) and number inputs
+    if (input.attr('type') === 'checkbox') {
+      value = input.prop('checked')
+    } else if (input.attr('data-dtype') === 'Number' || input.attr('type') === 'number') {
       value = parseInt(value) || 0
     }
-    
+
     console.log('dccrpg-character-sheet-customizer | Field change:', fieldId, '=', value)
     queueSave(actor, fieldId, value, fieldPart)
   })
@@ -334,7 +336,41 @@ function attachEventListeners (html, actor) {
     console.log('dccrpg-character-sheet-customizer | Stepper:', fieldId, '=', currentValue)
     queueSave(actor, fieldId, currentValue, undefined)
   })
-  
+
+  // Listen for Resource +/- button clicks - clamps Current to 0..Max, reading
+  // Max live from its sibling input (not a hardcoded ceiling)
+  html.off('click.customizer-resource').on('click.customizer-resource', '.customizer-resource-btn', function (event) {
+    event.preventDefault()
+    event.stopPropagation()
+
+    const button = $(this)
+    const action = button.data('action')
+    const fieldId = button.data('field-id')
+
+    if (!fieldId) {
+      console.warn('dccrpg-character-sheet-customizer | Resource button missing field ID')
+      return
+    }
+
+    const container = button.closest('.customizer-resource')
+    const currentInput = container.find('input[data-field-part="current"]')
+    const maxInput = container.find('input[data-field-part="max"]')
+
+    let current = parseInt(currentInput.val()) || 0
+    const max = parseInt(maxInput.val()) || 0
+
+    if (action === 'increment') {
+      current = Math.min(current + 1, max)
+    } else if (action === 'decrement') {
+      current = Math.max(current - 1, 0)
+    }
+
+    currentInput.val(current)
+
+    console.log('dccrpg-character-sheet-customizer | Resource:', fieldId, '=', current)
+    queueSave(actor, fieldId, current, 'current')
+  })
+
   // Listen for ability check rolls on custom abilities
   html.off('click.customizer-roll').on('click.customizer-roll', '[data-action="rollAbilityCheck"][data-field-id]', async function (event) {
     event.preventDefault()
@@ -443,14 +479,35 @@ async function saveFieldValue (actor, fieldId, value, fieldPart) {
       console.error('dccrpg-character-sheet-customizer | ✗ Error saving ability:', error)
       throw error
     }
+  } else if (fieldConfig.type === FIELD_TYPES.RESOURCE) {
+    // Resource stores {current, max} in fieldValues, same shape as Current/Max
+    // abilities store in the abilities flag, just under the other flag.
+    console.log('dccrpg-character-sheet-customizer | Saving resource field:', fieldId, value, fieldPart)
+
+    const fieldValues = getActorFieldValues(actor)
+    const currentResource = fieldValues[fieldId] || {}
+
+    if (fieldPart === 'current') {
+      currentResource.current = value
+    } else if (fieldPart === 'max') {
+      currentResource.max = value
+    }
+
+    try {
+      await setFieldValue(actor, fieldId, currentResource)
+      console.log('dccrpg-character-sheet-customizer | ✓ Resource field saved successfully')
+    } catch (error) {
+      console.error('dccrpg-character-sheet-customizer | ✗ Error saving resource field:', error)
+      throw error
+    }
   } else {
-    // Handle panel fields (Simple, SimpleNum, Stepper) stored in fieldValues flag
+    // Handle panel fields (Simple, SimpleNum, Stepper, Choice, Toggle) stored in fieldValues flag
     console.log('dccrpg-character-sheet-customizer | Saving panel field:', fieldId, value)
-    
+
     try {
       await setFieldValue(actor, fieldId, value)
       console.log('dccrpg-character-sheet-customizer | ✓ Panel field saved successfully')
-      
+
       // Verify it was saved
       const verified = getActorFieldValues(actor)
       console.log('dccrpg-character-sheet-customizer | Verified saved data:', verified[fieldId])

@@ -13,7 +13,10 @@ export const FIELD_TYPES = {
   SIMPLE_NUM: 'simpleNum',
   CURRENT_MAX: 'currentMax',
   STEPPER: 'stepper',
-  CUSTOM_ABILITY: 'customAbility'
+  CUSTOM_ABILITY: 'customAbility',
+  RESOURCE: 'resource',
+  CHOICE: 'choice',
+  TOGGLE: 'toggle'
 }
 
 /**
@@ -245,9 +248,155 @@ export const StepperField = {
   serialize (value) {
     return parseInt(value) || 0
   },
-  
+
   deserialize (stored) {
     return parseInt(stored) || 0
+  }
+}
+
+/**
+ * Resource Field
+ * Current/Max with +/- buttons that only affect Current, clamped to 0..Max.
+ * Max starts at the field's configured Default Max, then becomes a normal
+ * independently-stored-per-actor value once touched (same pattern as
+ * CurrentMaxField's own Max).
+ */
+export const ResourceField = {
+  type: FIELD_TYPES.RESOURCE,
+  label: 'Resource',
+
+  render (fieldConfig, value = {}) {
+    const fieldId = fieldConfig.id
+    const label = fieldConfig.label || 'Field'
+    const current = value?.current ?? 0
+    const max = value?.max ?? fieldConfig.defaultMax ?? 0
+
+    return `
+      <div class="customizer-field customizer-resource" data-field-id="${fieldId}" data-field-type="${this.type}">
+        <label class="customizer-label">${label}</label>
+        <div class="customizer-resource-inputs">
+          <button
+            type="button"
+            class="customizer-resource-btn"
+            data-action="decrement"
+            data-field-id="${fieldId}"
+          >−</button>
+          <input
+            type="number"
+            id="customizer-${fieldId}-current"
+            name="customizer-${fieldId}-current"
+            value="${current}"
+            data-field-id="${fieldId}"
+            data-field-part="current"
+            placeholder="0"
+          >
+          <button
+            type="button"
+            class="customizer-resource-btn"
+            data-action="increment"
+            data-field-id="${fieldId}"
+          >+</button>
+          <span class="customizer-sep">/</span>
+          <input
+            type="number"
+            id="customizer-${fieldId}-max"
+            name="customizer-${fieldId}-max"
+            value="${max}"
+            data-field-id="${fieldId}"
+            data-field-part="max"
+            placeholder="0"
+          >
+        </div>
+      </div>
+    `
+  },
+
+  serialize (value) {
+    return {
+      current: parseInt(value?.current) || 0,
+      max: parseInt(value?.max) || 0
+    }
+  },
+
+  deserialize (stored) {
+    return {
+      current: parseInt(stored?.current) || 0,
+      max: parseInt(stored?.max) || 0
+    }
+  }
+}
+
+/**
+ * Choice Field
+ * A GM-defined dropdown. Options are a plain string array (entered as one
+ * option per line in the config dialog); value is the selected string.
+ */
+export const ChoiceField = {
+  type: FIELD_TYPES.CHOICE,
+  label: 'Choice',
+
+  render (fieldConfig, value = '') {
+    const fieldId = fieldConfig.id
+    const label = fieldConfig.label || 'Field'
+    const options = Array.isArray(fieldConfig.options) ? fieldConfig.options : []
+    const safeValue = value || options[0] || ''
+
+    const optionsHtml = options.map(opt =>
+      `<option value="${opt}" ${opt === safeValue ? 'selected' : ''}>${opt}</option>`
+    ).join('')
+
+    return `
+      <label class="customizer-label" for="customizer-${fieldId}">${label}</label>
+      <select
+        class="customizer-input"
+        id="customizer-${fieldId}"
+        name="customizer-${fieldId}"
+        data-field-id="${fieldId}"
+      >${optionsHtml}</select>
+    `
+  },
+
+  serialize (value) {
+    return String(value || '')
+  },
+
+  deserialize (stored) {
+    return String(stored || '')
+  }
+}
+
+/**
+ * Toggle Field
+ * A simple checkbox; value is a boolean.
+ */
+export const ToggleField = {
+  type: FIELD_TYPES.TOGGLE,
+  label: 'Toggle',
+
+  render (fieldConfig, value = false) {
+    const fieldId = fieldConfig.id
+    const label = fieldConfig.label || 'Field'
+    const checked = value ? 'checked' : ''
+
+    return `
+      <label class="customizer-label" for="customizer-${fieldId}">${label}</label>
+      <input
+        type="checkbox"
+        class="customizer-input customizer-toggle-input"
+        id="customizer-${fieldId}"
+        name="customizer-${fieldId}"
+        data-field-id="${fieldId}"
+        ${checked}
+      >
+    `
+  },
+
+  serialize (value) {
+    return Boolean(value)
+  },
+
+  deserialize (stored) {
+    return Boolean(stored)
   }
 }
 
@@ -387,6 +536,12 @@ export function getFieldRenderer (type) {
       return StepperField
     case FIELD_TYPES.CUSTOM_ABILITY:
       return CustomAbilityField
+    case FIELD_TYPES.RESOURCE:
+      return ResourceField
+    case FIELD_TYPES.CHOICE:
+      return ChoiceField
+    case FIELD_TYPES.TOGGLE:
+      return ToggleField
     default:
       console.warn(`Unknown field type: ${type}`)
       return SimpleField

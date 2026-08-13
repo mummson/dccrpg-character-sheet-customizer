@@ -14,10 +14,14 @@ const MODULE_ID = 'dccrpg-character-sheet-customizer'
  */
 Hooks.once('init', function () {
   console.log(`${MODULE_ID} | Initializing`)
-  
+
   // Register settings
   registerSettings()
-  
+
+  // Used by the config dialog to round-trip a Choice field's options array
+  // through a plain multiline textarea.
+  Handlebars.registerHelper('joinLines', arr => (Array.isArray(arr) ? arr.join('\n') : ''))
+
   console.log(`${MODULE_ID} | Initialized`)
 })
 

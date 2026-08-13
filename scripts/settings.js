@@ -93,6 +93,21 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
           value: FIELD_TYPES.STEPPER,
           label: 'Counter',
           description: 'A number with +/- buttons for quick adjustments, like a Luck Pool.'
+        },
+        {
+          value: FIELD_TYPES.RESOURCE,
+          label: 'Resource',
+          description: 'Current/Max with +/- buttons on Current only, clamped between 0 and Max.'
+        },
+        {
+          value: FIELD_TYPES.CHOICE,
+          label: 'Choice',
+          description: 'A dropdown with options you define.'
+        },
+        {
+          value: FIELD_TYPES.TOGGLE,
+          label: 'Toggle',
+          description: 'A simple on/off checkbox.'
         }
       ],
       appliesToOptions: [
@@ -101,6 +116,26 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
         { value: 'npc', label: 'NPC Only' }
       ]
     }
+  }
+
+  /**
+   * Keep each field-row's data-field-type attribute in sync with its Type
+   * select as the user changes it, so type-specific sub-fields (e.g.
+   * Resource's Default Max, Choice's options) reveal immediately via CSS
+   * instead of only after the next re-render. A pure-CSS :has(option
+   * [selected]) selector can't do this: Handlebars' "selected" is a static
+   * HTML attribute, not the select's live value.
+   * @override
+   */
+  _onRender (context, options) {
+    super._onRender(context, options)
+
+    this.element.querySelectorAll('.field-row select[name$=".type"]').forEach(select => {
+      const row = select.closest('.field-row')
+      if (!row) return
+      row.setAttribute('data-field-type', select.value)
+      select.addEventListener('change', () => row.setAttribute('data-field-type', select.value))
+    })
   }
 
   /**
@@ -308,7 +343,17 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
             }
           }
 
-          panelData[panelIndex].fields[fieldIndex][fieldProp] = value
+          if (fieldProp === 'options') {
+            // Choice field: one option per line in a plain textarea
+            panelData[panelIndex].fields[fieldIndex][fieldProp] = value
+              .split('\n')
+              .map(s => s.trim())
+              .filter(Boolean)
+          } else if (fieldProp === 'defaultMax') {
+            panelData[panelIndex].fields[fieldIndex][fieldProp] = parseInt(value) || 0
+          } else {
+            panelData[panelIndex].fields[fieldIndex][fieldProp] = value
+          }
         }
       }
     }
@@ -333,7 +378,14 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
    */
   validateConfig (config) {
     const validAbilityTypes = [FIELD_TYPES.CUSTOM_ABILITY, FIELD_TYPES.CURRENT_MAX]
-    const validPanelFieldTypes = [FIELD_TYPES.SIMPLE, FIELD_TYPES.SIMPLE_NUM, FIELD_TYPES.STEPPER]
+    const validPanelFieldTypes = [
+      FIELD_TYPES.SIMPLE,
+      FIELD_TYPES.SIMPLE_NUM,
+      FIELD_TYPES.STEPPER,
+      FIELD_TYPES.RESOURCE,
+      FIELD_TYPES.CHOICE,
+      FIELD_TYPES.TOGGLE
+    ]
     const validScopes = ['pc', 'npc', 'both']
 
     // Validate abilities

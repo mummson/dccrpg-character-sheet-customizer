@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Increased the config dialog's default window size (900x750, up from 700x600).
+- Added three new panel field types: **Resource** (Current/Max with +/- buttons on
+  Current only, clamped between 0 and Max; GM sets a Default Max per field), **Choice**
+  (a GM-defined dropdown, one option per line), and **Toggle** (a simple checkbox).
 - Migrated the configuration dialog from the legacy `FormApplication`/`Dialog` API
   to `ApplicationV2`/`DialogV2`, ahead of Foundry removing the legacy Application
   framework. Raised `compatibility.minimum` to `13`.

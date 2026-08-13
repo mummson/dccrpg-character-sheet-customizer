@@ -296,6 +296,50 @@
   min-width: 0;
 }
 
+/* ===== Resource Field ===== */
+.customizer-resource-inputs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-start;
+}
+
+.customizer-resource-btn {
+  background: var(--system-button-background, rgba(0, 0, 0, 0.1));
+  border: 1px solid var(--system-button-border, rgba(0, 0, 0, 0.3));
+  border-radius: 3px;
+  width: 24px;
+  height: 22px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.customizer-resource-btn:hover {
+  background: var(--system-button-hover-background, rgba(0, 0, 0, 0.2));
+}
+
+.customizer-resource-btn:active {
+  transform: scale(0.95);
+}
+
+.customizer-resource-inputs input {
+  width: 40px;
+  text-align: center;
+}
+
+/* ===== Toggle Field ===== */
+.customizer-toggle-input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  justify-self: start;
+}
+
 /* ===== Responsive Adjustments ===== */
 @media (max-width: 600px) {
   .customizer-inner-grid {
@@ -328,7 +372,8 @@
 
 /* ===== Print Styles ===== */
 @media print {
-  .customizer-stepper-btn {
+  .customizer-stepper-btn,
+  .customizer-resource-btn {
     display: none;
   }
   

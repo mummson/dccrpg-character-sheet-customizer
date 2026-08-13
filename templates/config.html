@@ -166,20 +166,20 @@
           
           {{#if panel.fields.length}}
             {{#each panel.fields as |field fieldIndex|}}
-            <div class="field-row" data-field-index="{{fieldIndex}}" data-field-id="{{field.id}}">
+            <div class="field-row" data-field-index="{{fieldIndex}}" data-field-id="{{field.id}}" data-field-type="{{field.type}}">
               <!-- Hidden ID field that WILL be submitted -->
               <input type="hidden" name="panels[{{@../index}}].fields[{{fieldIndex}}].id" value="{{field.id}}">
-              
+
               <div class="stack">
-                <input 
-                  type="text" 
-                  name="panels[{{@../index}}].fields[{{fieldIndex}}].label" 
+                <input
+                  type="text"
+                  name="panels[{{@../index}}].fields[{{fieldIndex}}].label"
                   value="{{field.label}}"
                   placeholder="Field Label"
                   required
                 >
               </div>
-              
+
               <div class="stack">
                 <select name="panels[{{@../index}}].fields[{{fieldIndex}}].type">
                   {{#each @root.panelFieldTypes as |typeOption|}}
@@ -198,6 +198,25 @@
               >
                 <i class="fas fa-times"></i>
               </button>
+
+              <div class="stack field-extra field-extra-resource">
+                <label>Default Max</label>
+                <input
+                  type="number"
+                  name="panels[{{@../index}}].fields[{{fieldIndex}}].defaultMax"
+                  value="{{field.defaultMax}}"
+                  placeholder="0"
+                >
+              </div>
+
+              <div class="stack field-extra field-extra-choice">
+                <label>Options (one per line)</label>
+                <textarea
+                  name="panels[{{@../index}}].fields[{{fieldIndex}}].options"
+                  rows="3"
+                  placeholder="Option A&#10;Option B"
+                >{{joinLines field.options}}</textarea>
+              </div>
             </div>
             {{/each}}
           {{else}}
@@ -436,6 +455,30 @@
 .customizer-config .add-field {
   margin-top: 6px;
   width: 100%;
+}
+
+/* Type-specific sub-fields (Resource's Default Max, Choice's options) - hidden
+   by default, revealed by the field-row's data-field-type attribute (kept in
+   sync with the Type select live via settings.js's _onRender). */
+.customizer-config .field-extra {
+  display: none;
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+
+.customizer-config .field-row[data-field-type="resource"] .field-extra-resource {
+  display: flex;
+}
+
+.customizer-config .field-row[data-field-type="choice"] .field-extra-choice {
+  display: flex;
+}
+
+.customizer-config .field-extra textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
 }
 
 .customizer-config .empty-state {
