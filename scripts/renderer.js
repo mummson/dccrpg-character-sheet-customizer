@@ -5,14 +5,15 @@
 
 import { getAbilityModifier, ensureSign, debounce } from './util.js'
 import { getFieldRenderer, isAbilityField, FIELD_TYPES } from './fields.js'
-import { 
+import {
   getModuleConfig,
   getAbilitiesConfig,
   getPanelsConfig,
   getActorFieldValues,
   setFieldValue,
   getCustomAbilities,
-  setCustomAbility
+  setCustomAbility,
+  scopeMatchesActor
 } from './store.js'
 
 /**
@@ -23,21 +24,22 @@ import {
 export function injectCustomFields (sheet, html) {
   const actor = sheet.actor || sheet.document
   if (!actor) return
-  
+
   console.log('dccrpg-character-sheet-customizer | injectCustomFields called for', actor.name)
-  
+
   // Remove any existing injected content to prevent duplicates
   html.find('[data-customizer-container]').remove()
   html.find('.customizer-ability-box').remove()
   html.find('.customizer-panel').remove()
-  
-  // Get configuration using the new structure
-  const abilities = getAbilitiesConfig()
-  const panels = getPanelsConfig()
-  
+
+  // Get configuration, then narrow to what's scoped to this actor's type. Missing/
+  // 'both' appliesTo always passes, so pre-existing configs render exactly as before.
+  const abilities = getAbilitiesConfig().filter(a => scopeMatchesActor(a.appliesTo, actor.type))
+  const panels = getPanelsConfig().filter(p => scopeMatchesActor(p.appliesTo, actor.type))
+
   console.log('dccrpg-character-sheet-customizer | Abilities config:', abilities)
   console.log('dccrpg-character-sheet-customizer | Panels config:', panels)
-  
+
   // Inject a single full-width separator into character-grid before any custom content
   if (abilities.length > 0 || panels.length > 0) {
     injectCustomSeparator(html)
@@ -58,10 +60,10 @@ export function injectCustomFields (sheet, html) {
   } else {
     console.log('dccrpg-character-sheet-customizer | No panels to inject')
   }
-  
+
   // Attach event listeners
   attachEventListeners(html, actor)
-  
+
   // Auto-resize sheet if needed
   autoResizeSheet(sheet, html)
 }

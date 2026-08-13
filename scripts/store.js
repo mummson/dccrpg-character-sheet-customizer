@@ -65,6 +65,20 @@ export function getPanelsConfig () {
 }
 
 /**
+ * Determine whether a config item (ability or panel) should render for a given actor
+ * type. Missing/unrecognized appliesTo values default to 'both', so any ability/panel
+ * saved before this property existed keeps rendering everywhere exactly as before.
+ * @param {string|undefined} appliesTo - 'pc' | 'npc' | 'both' | undefined
+ * @param {string} actorType - actor.type, e.g. 'Player' | 'NPC'
+ * @returns {boolean}
+ */
+export function scopeMatchesActor (appliesTo, actorType) {
+  if (appliesTo === 'pc') return actorType === 'Player'
+  if (appliesTo === 'npc') return actorType === 'NPC'
+  return true
+}
+
+/**
  * LEGACY: Get panel configuration (for backwards compatibility)
  * @returns {Array} Array of panel configurations
  * @deprecated Use getModuleConfig() instead

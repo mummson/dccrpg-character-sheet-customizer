@@ -64,6 +64,11 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
         { value: FIELD_TYPES.SIMPLE, label: 'Text' },
         { value: FIELD_TYPES.SIMPLE_NUM, label: 'Number' },
         { value: FIELD_TYPES.STEPPER, label: 'Stepper' }
+      ],
+      appliesToOptions: [
+        { value: 'both', label: 'Both PC & NPC' },
+        { value: 'pc', label: 'PC Only' },
+        { value: 'npc', label: 'NPC Only' }
       ]
     }
   }
@@ -101,7 +106,8 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
     this.abilities.push({
       id: generateId('ability'),
       label: 'New Ability',
-      type: FIELD_TYPES.CUSTOM_ABILITY
+      type: FIELD_TYPES.CUSTOM_ABILITY,
+      appliesTo: 'both'
     })
     this.render()
   }
@@ -130,7 +136,8 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
     this.panels.push({
       id: generateId('panel'),
       label: 'New Panel',
-      fields: []
+      fields: [],
+      appliesTo: 'both'
     })
     this.render()
   }
@@ -249,6 +256,8 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
         panelData[panelIndex].label = value
       } else if (path === 'id') {
         // Skip - we already have ID from memory
+      } else if (path === 'appliesTo') {
+        panelData[panelIndex].appliesTo = value
       } else {
         // Handle field data
         const fieldMatch = path.match(/^fields\[(\d+)\]\.(.+)$/)
@@ -288,6 +297,7 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
   validateConfig (config) {
     const validAbilityTypes = [FIELD_TYPES.CUSTOM_ABILITY, FIELD_TYPES.CURRENT_MAX]
     const validPanelFieldTypes = [FIELD_TYPES.SIMPLE, FIELD_TYPES.SIMPLE_NUM, FIELD_TYPES.STEPPER]
+    const validScopes = ['pc', 'npc', 'both']
 
     // Validate abilities
     const abilityIds = new Set()
@@ -298,6 +308,10 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
 
       if (!validAbilityTypes.includes(ability.type)) {
         return { valid: false, error: `Invalid ability type: ${ability.type}` }
+      }
+
+      if (ability.appliesTo && !validScopes.includes(ability.appliesTo)) {
+        return { valid: false, error: `Invalid scope: ${ability.appliesTo}` }
       }
 
       if (abilityIds.has(ability.id)) {
@@ -313,6 +327,10 @@ export class CustomizerConfigDialog extends HandlebarsApplicationMixin(Applicati
     for (const panel of config.panels) {
       if (!panel.label || panel.label.trim() === '') {
         return { valid: false, error: 'All panels must have a label' }
+      }
+
+      if (panel.appliesTo && !validScopes.includes(panel.appliesTo)) {
+        return { valid: false, error: `Invalid scope: ${panel.appliesTo}` }
       }
 
       if (panelIds.has(panel.id)) {

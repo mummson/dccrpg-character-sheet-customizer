@@ -42,10 +42,22 @@
         </div>
         
         <div class="stack">
+          <label for="ability-{{index}}-appliesTo">Applies To</label>
+          <select
+            id="ability-{{index}}-appliesTo"
+            name="abilities[{{index}}].appliesTo"
+          >
+            {{#each @root.appliesToOptions as |scopeOption|}}
+            <option value="{{scopeOption.value}}" {{#if ability.appliesTo}}{{#if (eq ability.appliesTo scopeOption.value)}}selected{{/if}}{{else}}{{#if (eq scopeOption.value "both")}}selected{{/if}}{{/if}}>{{scopeOption.label}}</option>
+            {{/each}}
+          </select>
+        </div>
+
+        <div class="stack">
           <label class="small muted">ID</label>
           <span class="id-display small muted">{{ability.id}}</span>
         </div>
-        
+
         <button
           type="button"
           class="delete-ability danger"
@@ -91,7 +103,19 @@
               required
             >
           </div>
-          
+
+          <div class="stack">
+            <label for="panel-{{index}}-appliesTo">Applies To</label>
+            <select
+              id="panel-{{index}}-appliesTo"
+              name="panels[{{index}}].appliesTo"
+            >
+              {{#each @root.appliesToOptions as |scopeOption|}}
+              <option value="{{scopeOption.value}}" {{#if panel.appliesTo}}{{#if (eq panel.appliesTo scopeOption.value)}}selected{{/if}}{{else}}{{#if (eq scopeOption.value "both")}}selected{{/if}}{{/if}}>{{scopeOption.label}}</option>
+              {{/each}}
+            </select>
+          </div>
+
           <button
             type="button"
             class="delete-panel danger"
@@ -243,7 +267,7 @@
 
 .customizer-config .ability-row {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr auto;
+  grid-template-columns: 1.3fr 0.9fr 0.9fr 0.9fr auto;
   gap: 8px;
   align-items: end;
   margin-bottom: 8px;
@@ -274,7 +298,7 @@
 
 .customizer-config .row-head {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto;
   gap: 8px;
   align-items: end;
   margin-bottom: 10px;
