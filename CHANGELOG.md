@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- Fixed a crash when clicking a rollable custom ability: this module's
+  injected HTML used `data-action="rollAbilityCheck"` on custom ability
+  labels, but that HTML lives inside the DCC actor sheet's own DOM - Foundry's
+  ApplicationV2 action dispatch is one delegated listener per sheet matching
+  *any* `[data-action]` inside it, and DCC's own sheet already has a
+  `rollAbilityCheck` action registered. Every click double-fired: our own
+  handler, and DCC's native one, which then crashed trying to read core
+  ability data for a field that isn't one. Renamed to a non-colliding
+  `data-customizer-action` attribute (also applied to the Counter/Resource
+  +/- buttons for the same reason, pre-emptively).
+- Fixed rollable abilities with a stat/save Source crashing with
+  "Die is not defined": `game.dcc.DCCRoll.createRoll` accepts a plain
+  formula string, but that code path in the installed DCC system has a bug
+  referencing an undefined `Die` global. Switched to passing a proper array
+  of term descriptors instead (which doesn't hit that code path) for
+  stat-sourced rolls; Custom Formula rolls bypass DCCRoll's modifier dialog
+  entirely and evaluate through a plain Roll instead, since a freeform
+  formula was never mechanically compatible with that path in the first place.
 - Added a "Rollable" option to custom abilities (both Custom Ability and
   Current/Max types): a Roll Name, a Source (the ability's own value/mod, one
   of the six core ability mods, one of the three saves, or a freeform custom

@@ -162,10 +162,17 @@ export const CurrentMaxField = {
     // Current/Max never had a roll affordance before this was configurable -
     // default false, a purely new opt-in capability (unlike Custom Ability
     // below, there's no prior always-on behavior to preserve here).
+    // Uses data-customizer-action (not data-action): this HTML is injected
+    // into the DCC actor sheet's own DOM, and Foundry's ApplicationV2 action
+    // dispatch is a single delegated listener on the whole sheet that reads
+    // *any* [data-action] inside it - DCC's sheet has its own "rollAbilityCheck"
+    // action registered, so data-action="rollAbilityCheck" here would double-fire
+    // both our own handler and DCC's native one (which then crashes reading
+    // ability data that doesn't exist for a custom field).
     const rollable = fieldConfig.rollConfig?.enabled
     const rollName = fieldConfig.rollConfig?.rollName?.trim() || label
     const titleAttrs = rollable
-      ? `class="box-title rollable" title="Roll ${rollName} Check" data-action="rollAbilityCheck" data-field-id="${fieldId}"`
+      ? `class="box-title rollable" title="Roll ${rollName} Check" data-customizer-action="rollAbilityCheck" data-field-id="${fieldId}"`
       : 'class="box-title"'
 
     return `
@@ -232,28 +239,28 @@ export const StepperField = {
     return `
       <label class="customizer-label">${label}</label>
       <div class="customizer-stepper" data-stepper-field="${fieldId}">
-        <button 
-          type="button" 
-          class="customizer-stepper-btn" 
-          data-action="decrement"
+        <button
+          type="button"
+          class="customizer-stepper-btn"
+          data-customizer-action="decrement"
         >−</button>
-        <input 
-          type="number" 
-          id="customizer-${fieldId}" 
+        <input
+          type="number"
+          id="customizer-${fieldId}"
           name="customizer-${fieldId}"
           class="customizer-stepper-input"
           value="${safeValue}"
           data-field-id="${fieldId}"
         >
-        <button 
-          type="button" 
-          class="customizer-stepper-btn" 
-          data-action="increment"
+        <button
+          type="button"
+          class="customizer-stepper-btn"
+          data-customizer-action="increment"
         >+</button>
       </div>
     `
   },
-  
+
   serialize (value) {
     return parseInt(value) || 0
   },
@@ -287,7 +294,7 @@ export const ResourceField = {
           <button
             type="button"
             class="customizer-resource-btn"
-            data-action="decrement"
+            data-customizer-action="decrement"
             data-field-id="${fieldId}"
           >−</button>
           <input
@@ -302,7 +309,7 @@ export const ResourceField = {
           <button
             type="button"
             class="customizer-resource-btn"
-            data-action="increment"
+            data-customizer-action="increment"
             data-field-id="${fieldId}"
           >+</button>
           <span class="customizer-sep">/</span>
@@ -469,7 +476,7 @@ export const CustomAbilityField = {
     const rollable = fieldConfig.rollConfig ? fieldConfig.rollConfig.enabled : true
     const rollName = fieldConfig.rollConfig?.rollName?.trim() || label
     const titleAttrs = rollable
-      ? `class="box-title rollable" title="Roll ${rollName} Check" data-action="rollAbilityCheck" data-field-id="${fieldId}"`
+      ? `class="box-title rollable" title="Roll ${rollName} Check" data-customizer-action="rollAbilityCheck" data-field-id="${fieldId}"`
       : 'class="box-title"'
 
     return `

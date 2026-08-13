@@ -309,8 +309,8 @@ function attachEventListeners (html, actor) {
     event.stopPropagation()
     
     const button = $(this)
-    const action = button.data('action')
-    
+    const action = button.data('customizerAction')
+
     // Find the input in the same stepper container
     const stepper = button.closest('.customizer-stepper')
     const input = stepper.find('input.customizer-stepper-input')
@@ -344,7 +344,7 @@ function attachEventListeners (html, actor) {
     event.stopPropagation()
 
     const button = $(this)
-    const action = button.data('action')
+    const action = button.data('customizerAction')
     const fieldId = button.data('field-id')
 
     if (!fieldId) {
@@ -371,8 +371,12 @@ function attachEventListeners (html, actor) {
     queueSave(actor, fieldId, current, 'current')
   })
 
-  // Listen for ability check rolls on custom abilities
-  html.off('click.customizer-roll').on('click.customizer-roll', '[data-action="rollAbilityCheck"][data-field-id]', async function (event) {
+  // Listen for ability check rolls on custom abilities. Uses
+  // data-customizer-action rather than data-action - see the comment in
+  // fields.js's renderAsAbility for why (Foundry's action dispatch is a
+  // single delegated listener on the whole sheet, and DCC's own sheet
+  // already has a "rollAbilityCheck" action registered).
+  html.off('click.customizer-roll').on('click.customizer-roll', '[data-customizer-action="rollAbilityCheck"][data-field-id]', async function (event) {
     event.preventDefault()
     const element = $(this)
     const fieldId = element.data('field-id')
@@ -599,27 +603,54 @@ async function rollCustomAbilityCheck (actor, fieldId, event) {
 }
 
 /**
- * Roll-over path: 1d20 + a resolved bonus (or a freeform custom formula),
- * evaluated through game.dcc.DCCRoll.createRoll so it respects the same
- * modifier-dialog behavior (and Ctrl-click toggle) as a real DCC ability
- * check. DCCRoll.createRoll accepts a plain formula string directly (it
- * auto-decomposes it into Die/Modifier terms), so stat-sourced and
- * custom-formula rolls share this one path.
+ * Roll-over path: 1d20 + a resolved bonus (or a freeform custom formula).
+ *
+ * Stat-sourced rolls go through game.dcc.DCCRoll.createRoll with a proper
+ * *array* of DCC term descriptors ([{type:'Die',...}, {type:'Modifier',...}])
+ * so they respect the same modifier-dialog behavior (and Ctrl-click toggle)
+ * as a real DCC ability check. This deliberately does NOT pass a plain
+ * formula string to DCCRoll.createRoll even though the API accepts one:
+ * that code path (RollModifierDialog#_constructTermsFromRoll) references a
+ * bare `Die` global that throws "Die is not defined" in this DCC version -
+ * confirmed live. The term-array path (#_constructTermsFromArray) never
+ * touches that code and works correctly.
+ *
+ * Custom formulas are freeform and don't decompose into a single Die+
+ * Modifier pair, so they bypass DCCRoll/the modifier dialog entirely and
+ * evaluate through a plain Roll instead - a documented limitation, not a
+ * workaround for the bug above (this path never hit it).
  */
 async function rollCustomAbilityRollOver (actor, fieldConfig, abilityValue, rollConfig, label, rollData, event) {
-  let formula
-  if (rollConfig.source === 'custom') {
-    formula = rollConfig.customFormula?.trim() || '1d20'
-  } else {
-    const bonus = resolveRollBonus(fieldConfig, abilityValue, rollConfig.source, rollData)
-    formula = `1d20${bonus >= 0 ? '+' : ''}${bonus}`
+  const flags = {
+    'dcc.RollType': 'AbilityCheck',
+    'dcc.Ability': fieldConfig.id,
+    'dcc.isAbilityCheck': true
   }
+
+  if (rollConfig.source === 'custom') {
+    const formula = rollConfig.customFormula?.trim() || '1d20'
+    const roll = new Roll(formula, rollData)
+    await roll.evaluate()
+    await roll.toMessage({
+      speaker: ChatMessage.getSpeaker({ actor }),
+      flavor: `${label} Check`,
+      flags,
+      rollMode: game.settings.get('core', 'rollMode')
+    })
+    return
+  }
+
+  const bonus = resolveRollBonus(fieldConfig, abilityValue, rollConfig.source, rollData)
+  const terms = [
+    { type: 'Die', formula: '1d20' },
+    { type: 'Modifier', label, formula: `${bonus}` }
+  ]
 
   const showModifierDialog = game.settings.get('dcc', 'showRollModifierByDefault') !== !!(event?.ctrlKey || event?.metaKey)
 
   let roll
   try {
-    roll = await game.dcc.DCCRoll.createRoll(formula, rollData, { showModifierDialog })
+    roll = await game.dcc.DCCRoll.createRoll(terms, rollData, { showModifierDialog })
   } catch (err) {
     // The modifier dialog was cancelled/closed without submitting - a normal
     // user decision, not an error. DCC signals this with a typed error, a
@@ -634,11 +665,7 @@ async function rollCustomAbilityRollOver (actor, fieldConfig, abilityValue, roll
   await roll.toMessage({
     speaker: ChatMessage.getSpeaker({ actor }),
     flavor: `${label} Check`,
-    flags: {
-      'dcc.RollType': 'AbilityCheck',
-      'dcc.Ability': fieldConfig.id,
-      'dcc.isAbilityCheck': true
-    },
+    flags,
     rollMode: game.settings.get('core', 'rollMode')
   })
 }
