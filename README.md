@@ -136,10 +136,13 @@ aren't usable in roll formulas, so they don't have one.
 ```javascript
 // Roll a custom ability check
 1d20 + @sanityMod
-
-// Use in other formulas, e.g. a weapon's damage formula
-1d6 + @sanityMod
 ```
+
+`@sanityMod`-style keys resolve anywhere Foundry passes the actor's own
+roll data into a formula (chat rolls, macros). Whether that includes a
+given item's formula field depends on that item type's own roll code, not
+on this module - check that it works before relying on it in, say, a
+weapon's damage formula.
 
 ## Technical Details
 
