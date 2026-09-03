@@ -137,14 +137,8 @@ aren't usable in roll formulas, so they don't have one.
 // Roll a custom ability check
 1d20 + @sanityMod
 
-// Check against ability value
-1d20 vs @customAbilities.sanity.value
-
-// Use in item formulas
-1d6 + @sanityMod damage
-
-// Complex formulas
-1d20 + @sanityMod + @lck - @customAbilities.corruption.value
+// Use in other formulas, e.g. a weapon's damage formula
+1d6 + @sanityMod
 ```
 
 ## Technical Details
