@@ -2,20 +2,29 @@
 
 Add custom fields and abilities to your DCC RPG character sheets in Foundry VTT!
 
+![A custom Grit ability sitting next to core Luck, and a custom panel with Path/Boon/Hex fields](screenshots/example.png)
+
+*A custom "Grit" ability (Current/Max) alongside the core Luck ability, plus a
+custom "Weird Frontiers" panel using a Choice field (Path) and two
+Resource/Counter-style fields (Boon, Hex).*
+
 ## Features
 
-### Five Field Types
+### Eight Field Types
 
 1. **Text** - Simple text input field
 2. **Number** - Numeric input field
 3. **Current/Max** - Track resources with current and maximum values (appears in abilities section)
 4. **Counter** - Number field with increment/decrement buttons
-5. **Custom Ability** - Full ability score with value, max, and auto-calculated modifier (appears in abilities section)
+5. **Resource** - Current/Max with +/- buttons on Current only, clamped between 0 and Max; the GM sets a Default Max per field
+6. **Choice** - A GM-defined dropdown (one option per line)
+7. **Toggle** - A simple on/off checkbox
+8. **Custom Ability** - Full ability score with value, max, and auto-calculated modifier (appears in abilities section)
 
 ### Smart Placement
 
 - **Ability Fields** (Custom Ability & Current/Max) automatically appear in the abilities section below Luck, styled to match core abilities
-- **Panel Fields** (Text, Number, Counter) appear in configurable panels at the top or bottom of character sheets
+- **Panel Fields** (Text, Number, Counter, Resource, Choice, Toggle) appear in configurable panels at the top or bottom of character sheets
 
 ### Roll Integration
 
@@ -26,6 +35,24 @@ Custom abilities are fully integrated with the DCC roll system:
 - Modifiers auto-calculate using DCC ability score table (3-24)
 - Roll Keys can't collide with each other or with DCC's own roll data (`str`, `hp`,
   `ac`, etc.) — the config dialog validates this when you save
+
+#### Rollable Custom Abilities
+
+Custom Ability and Current/Max fields have a **Rollable** option (on by
+default for Custom Ability, matching prior versions). When enabled, you get:
+
+- **Roll Name** - the label shown on the roll (defaults to the field's own label)
+- **Source** - what the roll is based on: the ability's own value/mod, one of
+  the six core ability modifiers (Strength, Agility, Stamina, Personality,
+  Intelligence, Luck), one of the three saves (Fortitude, Reflex, Will), or a
+  freeform **Custom Formula**
+- **Roll Under** - mirrors DCC's own Luck check: a naked d20 compared against
+  the score, instead of d20 + modifier
+
+Rolling a custom ability goes through the same `DCCRoll` API and modifier
+dialog real DCC ability checks use, so it behaves exactly like rolling a core
+ability - including respecting Ctrl-click and the "show roll modifier by
+default" setting.
 
 ### PC / NPC Scoping
 
@@ -185,7 +212,8 @@ dccrpg-character-sheet-customizer/
 ├── styles/
 │   └── module.css       # Styling
 ├── templates/
-│   └── config.html      # Settings form
+│   ├── config.html      # Settings form
+│   └── panel.hbs        # Panel field template
 ├── lang/
 │   └── en.json         # Localization
 └── module.json         # Manifest

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.1.0 - 2026-09-03
 
 - Fixed a crash when clicking a rollable custom ability: this module's
   injected HTML used `data-action="rollAbilityCheck"` on custom ability
