@@ -209,4 +209,4 @@ See [CHANGELOG.md](CHANGELOG.md).
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/mummson/dccrpg-character-sheet-customizer/issues)
-- **Discord**: Find me on the Foundry VTT Discord
+- **Discord**: dr_mummson
