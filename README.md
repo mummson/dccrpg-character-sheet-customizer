@@ -185,37 +185,6 @@ The module uses DCC system CSS variables. If styles look wrong:
 2. Check for conflicting modules
 3. Try disabling other sheet-modifying modules
 
-## Development
-
-### Building From Source
-
-```bash
-git clone https://github.com/mummson/dccrpg-character-sheet-customizer
-cd dccrpg-character-sheet-customizer
-# Copy to Foundry modules directory
-```
-
-### File Structure
-
-```
-dccrpg-character-sheet-customizer/
-├── scripts/
-│   ├── main.js          # Entry point & hooks
-│   ├── settings.js      # Configuration UI
-│   ├── renderer.js      # DOM injection & events
-│   ├── fields.js        # Field type definitions
-│   ├── store.js         # Data persistence
-│   └── util.js          # Helper functions
-├── styles/
-│   └── module.css       # Styling
-├── templates/
-│   ├── config.html      # Settings form
-│   └── panel.hbs        # Panel field template
-├── lang/
-│   └── en.json         # Localization
-└── module.json         # Manifest
-```
-
 ## Contributing
 
 Contributions welcome! Please:
