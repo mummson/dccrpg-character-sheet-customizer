@@ -1,8 +1,8 @@
-
+# DCC RPG Character Sheet Customizer
 ![Foundry Version](https://img.shields.io/badge/Foundry-v14-informational)
 ![System](https://img.shields.io/badge/System-DCC-blue)
 ![License](https://img.shields.io/github/license/mummson/dcc-custom-class-sheet)
-# DCC RPG Character Sheet Customizer
+
 Add custom fields and abilities to your DCC RPG character sheets in Foundry VTT!
 
 ![A custom Grit ability sitting next to core Luck, and a custom panel with Path/Boon/Hex fields](screenshots/example.png)
