@@ -1,11 +1,15 @@
 # DCC RPG Character Sheet Customizer
-
 Add custom fields and abilities to your DCC RPG character sheets in Foundry VTT!
+
+![Foundry Version](https://img.shields.io/badge/Foundry-v14-informational)
+![System](https://img.shields.io/badge/System-DCC-blue)
+![License](https://img.shields.io/github/license/mummson/dcc-custom-class-sheet)
+
 
 ![A custom Grit ability sitting next to core Luck, and a custom panel with Path/Boon/Hex fields](screenshots/example.png)
 
 *A custom "Grit" ability (Current/Max) alongside the core Luck ability, plus a
-custom "Weird Frontiers" panel using a Choice field (Path) and two
+custom "Weird Frontiers" panel using a Text field (Path) and two
 Resource/Counter-style fields (Boon, Hex).*
 
 ## Features
@@ -58,7 +62,7 @@ default" setting.
 
 Each custom ability and each custom panel has an **Applies To** setting: **Both**,
 **PC Only**, or **NPC Only**. Use this when a field only makes sense for one actor
-type — e.g. a Sanity ability for player characters, or a Morale tracker just for
+type, e.g. a Sanity ability for player characters, or a Morale tracker just for
 NPCs. Defaults to Both, matching prior versions where every field appeared
 everywhere.
 
@@ -141,7 +145,7 @@ aren't usable in roll formulas, so they don't have one.
 `@sanityMod`-style keys resolve anywhere Foundry passes the actor's own
 roll data into a formula (chat rolls, macros). Whether that includes a
 given item's formula field depends on that item type's own roll code, not
-on this module - check that it works before relying on it in, say, a
+on this module, check that it works before relying on it in, say, a
 weapon's damage formula.
 
 ## Technical Details
